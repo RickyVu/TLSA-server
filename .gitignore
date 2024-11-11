@@ -1,0 +1,37 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+Include
+Lib
+Scripts
+pyvenv.cfg
+
+# Django:
+*.log
+*.pot
+*.pyc
+*.sqlite3
+db.sqlite3
+secrets.py
+
+# Database
+*.sqlite3
+postgres_settings.py
+
+# Static files
+/static/
+media/
+
+# Environment variables
+.env
+
+# Others
+.vscode/
+deployment/
+local/
