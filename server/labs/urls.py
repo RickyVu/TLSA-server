@@ -1,5 +1,6 @@
 from django.urls import path
+from .views import LabView
 
 urlpatterns = [
-    #path('/', View.as_view(), name=''),
+    path('', LabView.as_view(), name='manage-lab'),
 ]

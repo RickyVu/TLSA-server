@@ -34,8 +34,8 @@ urlpatterns = [
     path('api/v1/verify/', VerifyView.as_view(), name='verify'),
 
     # Apps
-    path('api/v1/labs/', include('labs.urls')),
-    path('api/v1/courses/', include('courses.urls')),
-    path('api/v1/classes/', include('classes.urls')),
-    path('api/v1/notices/', include('notices.urls'))
+    path('api/v1/labs', include('labs.urls')),
+    path('api/v1/courses', include('courses.urls')),
+    path('api/v1/classes', include('classes.urls')),
+    path('api/v1/notices', include('notices.urls'))
 ]
