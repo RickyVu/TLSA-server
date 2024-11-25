@@ -1,5 +1,6 @@
 from django.urls import path
+from .views import ClassView
 
 urlpatterns = [
-    #path('/', View.as_view(), name=''),
+    path('', ClassView.as_view(), name='manage-class'),
 ]

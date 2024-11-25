@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from .models import Course
 from .serializers import CourseSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from tlsa_server.permissions import IsManager, IsStudent
+from tlsa_server.permissions import IsTeacher, IsStudent
 
 # Create your views here.
 class CourseView(APIView):
@@ -15,7 +15,7 @@ class CourseView(APIView):
         if self.request.method == 'GET':
             return [IsStudent()]
         elif self.request.method == 'POST':
-            return [IsManager()]
+            return [IsTeacher()]
         return []
     
     def post(self, request, format=None):
