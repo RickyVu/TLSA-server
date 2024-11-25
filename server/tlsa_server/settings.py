@@ -14,12 +14,12 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+SECRET_KEY = '8j!v#9@!8wrgw!)wok7*vw@rimg=bl64*)(-=idwbpx(3)0vz-'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-from .secrets import SECRET_KEY
+#from .secrets import SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'tlsa_server.wsgi.application'
 #    }
 #}
 
-from .postgres_settings import DATABASES
+#from .postgres_settings import DATABASES
 
 
 # Password validation

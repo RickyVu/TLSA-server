@@ -39,3 +39,5 @@ urlpatterns = [
     path('api/v1/classes', include('classes.urls')),
     path('api/v1/notices', include('notices.urls'))
 ]
+
+##swagger:   http://127.0.0.1:8000/api/v1/docs/swagger/
