@@ -42,32 +42,23 @@ class LabView(APIView):
                 name='lab_name',
                 type=str,
                 location=OpenApiParameter.QUERY,
-                description='Query by lab_name',
+                description='Query by lab_name (similarity)',
                 required=False,
             ),
         ],
         responses={
             200: LabSerializer(many=True),
-            400: {'error': 'Either lab_id or lab_name parameter is required'},
-            404: {'error': 'Lab not found'},
         },
     )
     def get(self, request, format=None):
         lab_id = request.query_params.get('lab_id')
         lab_name = request.query_params.get('lab_name')
 
-        lab_id = request.query_params.get('lab_id')
-        lab_name = request.query_params.get('lab_name')
-
-        if not lab_id and not lab_name:
-            return Response({"error": "Either lab_id or lab_name parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+        labs = Lab.objects.all()
 
         if lab_id:
-            try:
-                labs = Lab.objects.filter(id=lab_id)
-            except Lab.DoesNotExist:
-                return Response({"error": "Lab not found"}, status=status.HTTP_404_NOT_FOUND)
-        elif lab_name:
+            labs = Lab.objects.filter(id=lab_id)
+        if lab_name:
             labs = Lab.objects.filter(name__icontains=lab_name)
 
         serializer = self.serializer_class(labs, many=True)
@@ -106,26 +97,30 @@ class LabManagerView(APIView):
                 type=int,
                 location=OpenApiParameter.QUERY,
                 description='Lab ID to retrieve managers for',
-                required=True,
+                required=False,
+            ),
+            OpenApiParameter(
+                name='manager_name',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Manager name to retrieve (supports %LIKE% query)',
+                required=False,
             ),
         ],
         responses={
-            200: ManageLabSerializer(many=True),
-            400: {'error': 'lab_id parameter is required'},
-            404: {'error': 'Lab not found'},
+            200: ManagerDetailSerializer(many=True),
         },
     )
     def get(self, request, format=None):
         lab_id = request.query_params.get('lab_id')
-        if not lab_id:
-            return Response({"error": "lab_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+        manager_name = request.query_params.get('manager_name')
 
-        try:
-            lab = Lab.objects.get(id=lab_id)
-        except Lab.DoesNotExist:
-            return Response({"error": "Lab not found"}, status=status.HTTP_404_NOT_FOUND)
+        managers = ManageLab.objects.all()
 
-        managers = ManageLab.objects.filter(lab=lab)
-        #serializer = self.serializer_class(managers, many=True)
+        if lab_id:
+            managers = managers.filter(lab__id=lab_id)
+        if manager_name:
+            managers = managers.filter(manager__username__icontains=manager_name)
+
         serializer = ManagerDetailSerializer(managers, many=True)
         return Response(serializer.data)
