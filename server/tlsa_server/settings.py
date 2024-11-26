@@ -19,7 +19,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-#from .secrets import SECRET_KEY
+# Make a secrets.py file
+# content should be:
+# SECRET_KEY = ''
+from .secrets import SECRET_KEY
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -87,7 +91,9 @@ WSGI_APPLICATION = 'tlsa_server.wsgi.application'
 #    }
 #}
 
-#from .postgres_settings import DATABASES
+# Make a postgres_settings.py
+# Content contains postgres database settings
+from .postgres_settings import DATABASES
 
 
 # Password validation
