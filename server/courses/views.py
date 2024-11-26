@@ -1,27 +1,25 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
-from .models import Course
-from .serializers import CourseSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from tlsa_server.permissions import IsTeacher, IsStudent
+from .models import Course
+from .serializers import CourseSerializer, CourseEnrollmentSerializer, CourseClassSerializer
+from tlsa_server.permissions import IsAuthenticated, IsTeacher
 
-# Create your views here.
 class CourseView(APIView):
     serializer_class = CourseSerializer
 
     def get_permissions(self):
         if self.request.method == 'GET':
-            return [IsStudent()]
+            return [IsAuthenticated()]
         elif self.request.method == 'POST':
             return [IsTeacher()]
         return []
-    
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            course = serializer.save()
             return Response(
                 {
                     "message": "Course created successfully.",
@@ -38,24 +36,78 @@ class CourseView(APIView):
                 type=int,
                 location=OpenApiParameter.QUERY,
                 description='Course ID to retrieve',
-                required=True,
+                required=False,
+            ),
+            OpenApiParameter(
+                name='course_name',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Course name to retrieve (similarity)',
+                required=False,
             ),
         ],
         responses={
-            200: CourseSerializer,
-            400: {'error': 'course_id parameter is required'},
-            404: {'error': 'Course not found'},
+            200: CourseSerializer(many=True),
         },
     )
     def get(self, request, format=None):
-        course_id = request.query_params.get('lab_id')
-        if not course_id:
-            return Response({"error": "course_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+        course_id = request.query_params.get('course_id')
+        course_name = request.query_params.get('course_name')
 
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+        filters = {}
+        if course_id:
+            filters["id"] = course_id
+        if course_name:
+            filters["name__icontains"] = course_name
 
-        serializer = self.serializer_class(course)
+        courses = Course.objects.filter(**filters)
+        serializer = self.serializer_class(courses, many=True)
         return Response(serializer.data)
+
+class CourseEnrollmentView(APIView):
+    serializer_class = CourseEnrollmentSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsTeacher()]
+        return []
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            enrollments = serializer.save()
+            return Response(
+                {
+                    "message": "Students enrolled successfully.",
+                    "enrollment": {
+                        "student_ids": [enrollment.student.id for enrollment in enrollments],
+                        "course_id": enrollments[0].course.id
+                    }
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CourseClassView(APIView):
+    serializer_class = CourseClassSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsTeacher()]
+        return []
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            course_class = serializer.save()
+            return Response(
+                {
+                    "message": "Class added to course successfully.",
+                    "course_class": {
+                        "class_id": course_class.class_instance.id,
+                        "course_id": course_class.course.id
+                    }
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

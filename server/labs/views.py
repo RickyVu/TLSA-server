@@ -54,12 +54,13 @@ class LabView(APIView):
         lab_id = request.query_params.get('lab_id')
         lab_name = request.query_params.get('lab_name')
 
-        labs = Lab.objects.all()
-
+        filters = {}
         if lab_id:
-            labs = Lab.objects.filter(id=lab_id)
+            filters["id"] = lab_id
         if lab_name:
-            labs = Lab.objects.filter(name__icontains=lab_name)
+            filters["name__icontains"] = lab_name
+
+        labs = Lab.objects.filter(**filters)
 
         serializer = self.serializer_class(labs, many=True)
         return Response(serializer.data)
@@ -115,12 +116,13 @@ class LabManagerView(APIView):
         lab_id = request.query_params.get('lab_id')
         manager_name = request.query_params.get('manager_name')
 
-        managers = ManageLab.objects.all()
-
+        filters = {}
         if lab_id:
-            managers = managers.filter(lab__id=lab_id)
+            filters["id"] = lab_id
         if manager_name:
-            managers = managers.filter(manager__username__icontains=manager_name)
+            filters["manager__username__icontains"] = manager_name
 
+        managers = ManageLab.objects.filter(**filters)
+        
         serializer = ManagerDetailSerializer(managers, many=True)
         return Response(serializer.data)
