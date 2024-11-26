@@ -7,3 +7,4 @@ class LabSerializer(serializers.ModelSerializer):
         fields = ['lab_id', 'name', 'location']
 
     lab_id = serializers.IntegerField(source='id', read_only=True)
+    manager = serializers.ListField(child=serializers.CharField(), read_only=True)
