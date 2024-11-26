@@ -48,7 +48,7 @@ class ClassView(APIView):
         },
     )
     def get(self, request, format=None):
-        class_id = request.query_params.get('lab_id')
+        class_id = request.query_params.get('class_id')
         if not class_id:
             return Response({"error": "class_id parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
 
