@@ -104,7 +104,7 @@ class LabManagerView(APIView):
                 name='manager_name',
                 type=str,
                 location=OpenApiParameter.QUERY,
-                description='Manager name to retrieve (supports %LIKE% query)',
+                description='Manager name to retrieve (simularity)',
                 required=False,
             ),
         ],
