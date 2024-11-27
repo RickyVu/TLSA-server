@@ -19,6 +19,7 @@ pyvenv.cfg
 *.sqlite3
 db.sqlite3
 secrets.py
+allowed_hosts.py
 
 # Database
 *.sqlite3
