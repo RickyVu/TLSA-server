@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
 from .models import (Class, 
@@ -10,7 +11,7 @@ from .models import (Class,
 from .serializers import (ClassSerializer, 
                           TeachClassSerializer, 
                           ClassLocationSerializer,
-                          ClassCommentSerializer)
+                          ClassCommentSerializer, ClassCommentWithoutSenderSerializer)
 from courses.models import (CourseClass)
 
 class ClassView(APIView):
@@ -191,11 +192,15 @@ class ClassLocationView(APIView):
         return Response(serializer.data)
 
 class CommentToClassView(APIView):
-    serializer_class = ClassCommentSerializer
-
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def post(self, request, format=None):
-        serializer = self.serializer_class(data=request.data)
+        serializer_class = ClassCommentWithoutSenderSerializer
+        serializer = serializer_class(data=request.data)
         if serializer.is_valid():
+            # Set the sender_id to the authenticated user's ID
+            serializer.validated_data['sender_id'] = request.user
             serializer.save()
             return Response(
                 {
@@ -228,6 +233,7 @@ class CommentToClassView(APIView):
         },
     )
     def get(self, request, format=None):
+        serializer_class = ClassCommentSerializer
         class_id = request.query_params.get('class_id')
         sender_id = request.query_params.get('sender_id')
 
@@ -238,5 +244,5 @@ class CommentToClassView(APIView):
             filters["sender_id"] = sender_id
 
         comments = ClassComment.objects.filter(**filters)
-        serializer = self.serializer_class(comments, many=True)
+        serializer = serializer_class(comments, many=True)
         return Response(serializer.data)

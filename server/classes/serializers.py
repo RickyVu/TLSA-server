@@ -21,4 +21,9 @@ class ClassLocationSerializer(serializers.ModelSerializer):
 class ClassCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassComment
-        fields = ['sender_id', 'class_id', 'content']
+        fields = ['sender_id', 'class_id', 'content', 'sent_time']
+
+class ClassCommentWithoutSenderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassComment
+        fields = ['class_id', 'content']

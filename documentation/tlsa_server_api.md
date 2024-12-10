@@ -367,7 +367,6 @@
 - **Request JSON**:
     ```json
     {
-        "sender_id": "2021000000",
         "class_id": 1,
         "content": "Great class!"
     }
