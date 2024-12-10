@@ -35,7 +35,7 @@ class ClassOutputSerializer(serializers.ModelSerializer):
 
     def get_teachers(self, obj):
         teachers = TeachClass.objects.filter(class_id=obj.id)
-        return [{'teacher_id': teacher.teacher_id.id} for teacher in teachers]
+        return [{'teacher_id': teacher.teacher_id.id, "teacher_name": teacher.teacher_id.username} for teacher in teachers]
 
 class ClassCommentSerializer(serializers.ModelSerializer):
     class Meta:
