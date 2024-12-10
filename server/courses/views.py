@@ -2,12 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from .models import Course
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .models import Course, CourseEnrollment
 from .serializers import CourseSerializer, CourseEnrollmentSerializer, CourseClassSerializer
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
 
 class CourseView(APIView):
     serializer_class = CourseSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -45,6 +47,13 @@ class CourseView(APIView):
                 description='Course name to retrieve (similarity)',
                 required=False,
             ),
+            OpenApiParameter(
+                name='personal',
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                description='Get personal courses',
+                required=False,
+            ),
         ],
         responses={
             200: CourseSerializer(many=True),
@@ -53,12 +62,19 @@ class CourseView(APIView):
     def get(self, request, format=None):
         course_id = request.query_params.get('course_id')
         course_name = request.query_params.get('course_name')
+        personal = request.query_params.get('personal')
+        user = request.user
 
         filters = {}
         if course_id:
             filters["id"] = course_id
         if course_name:
             filters["name__icontains"] = course_name
+
+        if personal and personal.lower()=="true":
+            # Get courses that the user is enrolled in
+            enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
+            filters["id__in"] = enrolled_courses
 
         courses = Course.objects.filter(**filters)
         serializer = self.serializer_class(courses, many=True)

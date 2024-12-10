@@ -36,17 +36,21 @@
     }
     ```
 
-**Get User**
-- **URL**: `GET /api/v1/users?id=2021000000`
+- **URL**: `GET /api/v1/users/user-info?user_id=1`
+- Query params:
+    - user_id
+- Permissions:
+    - If student, can only view personal info, cannot view info of other students
+    - If teacher or manager, then can view all personal info
 - **Response JSON**:
     ```json
     {
-        "id": "2021000000",
-        "name": "name",
-        "email": "e@mail.com",
-        "role": "student",
-        "created_at": "2024-01-01T12:00:00Z",
-        "updated_at": "2024-01-01T12:00:00Z"
+        "id": 1,
+        "username": "john_doe",
+        "email": "john.doe@example.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "role": "student"
     }
     ```
 
@@ -178,10 +182,11 @@
     ```
 
 **Get Course**
-- **URL**: `GET /api/v1/courses/course?course_id=1&course_name=Chemistry`
+- **URL**: `GET /api/v1/courses/course?course_id=1&course_name=Chemistry&personal=false`
 - Query params:
     - course_id
     - course_name (similarity)
+    - personal (boolean)
 - **Response JSON**:
     ```json
     [

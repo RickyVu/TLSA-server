@@ -2,10 +2,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.views import APIView
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, RefreshTokenSerializer
+from .serializers import TLSAUserSerializer, UserRegistrationSerializer, UserLoginSerializer, RefreshTokenSerializer
 
 class RegisterView(APIView):
     """Register a new user."""
@@ -55,10 +57,59 @@ class LoginView(APIView):
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                'role': user.role
             })
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserInfoView(APIView):
+    """Retrieve user information based on user_id."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = TLSAUserSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='user_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='User ID to retrieve information for',
+                required=True,
+            ),
+        ],
+        responses={
+            200: serializer_class,
+            404: None,
+            403: None,
+        },
+    )
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+
+        if not user_id:
+            return Response({"error": "user_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        User = get_user_model()
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if the requesting user is allowed to view the information
+        if request.user.role in ['teacher', 'manager']:
+            # Teachers and managers can view any user's information
+            serializer = self.serializer_class(user)
+            return Response(serializer.data)
+        elif request.user.role == 'student':
+            # Students can only view their own information
+            if str(request.user.id) == user_id:
+                serializer = self.serializer_class(user)
+                return Response(serializer.data)
+            else:
+                return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
 
 class ValidateTokenView(APIView):
     """Validate a JWT token."""
