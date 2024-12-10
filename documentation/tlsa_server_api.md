@@ -104,14 +104,27 @@
     ```json
     [
         {
-            "lab_id": 1,
-            "name": "Organic Chemistry Lab Room 1",
-            "location": "Chemistry Building"
+            "id": 2,
+            "name": "基础化学实验1",
+            "managers": []
         },
         {
-            "lab_id": 2,
-            "name": "Organic Chemistry Lab Room 1",
-            "location": "New Chemistry Building"
+            "id": 1,
+            "name": "基础化学实验2",
+            "managers": [
+            {
+                "manager_id": 4,
+                "manager_name": "chem1",
+                "manager_email": "",
+                "lab_id": 1
+            },
+            {
+                "manager_id": 5,
+                "manager_name": "chem2",
+                "manager_email": "",
+                "lab_id": 1
+            }
+            ]
         }
     ]
     ```

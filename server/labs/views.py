@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Lab, ManageLab
-from .serializers import LabSerializer, ManageLabSerializer, ManagerDetailSerializer
+from .serializers import LabSerializer, ManageLabSerializer, ManagerDetailSerializer, LabOutputSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager
 
@@ -51,6 +51,7 @@ class LabView(APIView):
         },
     )
     def get(self, request, format=None):
+        serializer_class = LabOutputSerializer
         lab_id = request.query_params.get('lab_id')
         lab_name = request.query_params.get('lab_name')
 
@@ -62,7 +63,7 @@ class LabView(APIView):
 
         labs = Lab.objects.filter(**filters)
 
-        serializer = self.serializer_class(labs, many=True)
+        serializer = serializer_class(labs, many=True)
         return Response(serializer.data)
     
 class LabManagerView(APIView):
