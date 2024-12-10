@@ -12,10 +12,11 @@ from .serializers import (ClassSerializer,
                           TeachClassSerializer, 
                           ClassLocationSerializer,
                           ClassCommentSerializer, ClassCommentWithoutSenderSerializer)
-from courses.models import (CourseClass)
+from courses.models import (CourseClass, CourseEnrollment)
 
 class ClassView(APIView):
     serializer_class = ClassSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -60,6 +61,13 @@ class ClassView(APIView):
                 description='Course ID to retrieve classes for',
                 required=False,
             ),
+            OpenApiParameter(
+                name='personal',
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                description='Get personal classes',
+                required=False,
+            ),
         ],
         responses={
             200: ClassSerializer(many=True),
@@ -69,6 +77,8 @@ class ClassView(APIView):
         class_id = request.query_params.get('class_id')
         class_name = request.query_params.get('class_name')
         course_id = request.query_params.get('course_id')
+        personal = request.query_params.get('personal')
+        user = request.user
 
         filters = {}
         if class_id:
@@ -80,8 +90,14 @@ class ClassView(APIView):
             course_classes = CourseClass.objects.filter(course_id=course_id).values_list('class_instance_id', flat=True)
             filters["id__in"] = course_classes
 
-        classes = Class.objects.filter(**filters)
+        if personal and personal.lower()=="true":
+            # Get courses that the user is enrolled in
+            enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
+            # Get classes that belong to the enrolled courses
+            enrolled_classes = CourseClass.objects.filter(course_id__in=enrolled_courses).values_list('class_instance_id', flat=True)
+            filters["id__in"] = enrolled_classes
 
+        classes = Class.objects.filter(**filters)
         serializer = self.serializer_class(classes, many=True)
         return Response(serializer.data)
 
