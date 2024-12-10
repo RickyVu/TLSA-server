@@ -67,7 +67,7 @@ class ClassView(APIView):
     def get(self, request, format=None):
         class_id = request.query_params.get('class_id')
         class_name = request.query_params.get('class_name')
-        course_id = request.query_params.get('course')
+        course_id = request.query_params.get('course_id')
 
         filters = {}
         if class_id:

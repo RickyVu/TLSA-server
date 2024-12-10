@@ -258,10 +258,11 @@
     ```
 
 **Get Class**
-- **URL**: `GET /api/v1/classes/class?class_id=1&class_name=Biology`
+- **URL**: `GET /api/v1/classes/class?class_id=1&class_name=Biology&course_id=1`
 - Query params:
     - class_id
     - class_name (similarity)
+    - course_id
 - **Response JSON**:
     ```json
     [
