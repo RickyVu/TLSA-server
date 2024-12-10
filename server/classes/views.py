@@ -25,6 +25,9 @@ class ClassView(APIView):
             return [IsTeacher()]
         return []
 
+    @extend_schema(
+        request=ClassSerializer,
+    )
     def post(self, request, format=None):
         serializer_class = ClassSerializer
         serializer = serializer_class(data=request.data)
@@ -107,6 +110,9 @@ class ClassView(APIView):
 class TeacherClassView(APIView):
     serializer_class = TeachClassSerializer
 
+    @extend_schema(
+        request=TeachClassSerializer,
+    )
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -160,6 +166,9 @@ class TeacherClassView(APIView):
 class ClassLocationView(APIView):
     serializer_class = ClassLocationSerializer
 
+    @extend_schema(
+        request=ClassLocationSerializer,
+    )
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -213,6 +222,9 @@ class CommentToClassView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
     
+    @extend_schema(
+        request=ClassCommentWithoutSenderSerializer,
+    )
     def post(self, request, format=None):
         serializer_class = ClassCommentWithoutSenderSerializer
         serializer = serializer_class(data=request.data)
