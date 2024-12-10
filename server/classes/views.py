@@ -11,11 +11,11 @@ from .models import (Class,
 from .serializers import (ClassSerializer, 
                           TeachClassSerializer, 
                           ClassLocationSerializer,
+                          ClassOutputSerializer,
                           ClassCommentSerializer, ClassCommentWithoutSenderSerializer)
 from courses.models import (CourseClass, CourseEnrollment)
 
 class ClassView(APIView):
-    serializer_class = ClassSerializer
     authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
@@ -26,7 +26,8 @@ class ClassView(APIView):
         return []
 
     def post(self, request, format=None):
-        serializer = self.serializer_class(data=request.data)
+        serializer_class = ClassSerializer
+        serializer = serializer_class(data=request.data)
         if serializer.is_valid():
             class_instance = serializer.save()
             return Response(
@@ -74,6 +75,7 @@ class ClassView(APIView):
         },
     )
     def get(self, request, format=None):
+        serializer_class = ClassOutputSerializer
         class_id = request.query_params.get('class_id')
         class_name = request.query_params.get('class_name')
         course_id = request.query_params.get('course_id')
@@ -98,7 +100,7 @@ class ClassView(APIView):
             filters["id__in"] = enrolled_classes
 
         classes = Class.objects.filter(**filters)
-        serializer = self.serializer_class(classes, many=True)
+        serializer = serializer_class(classes, many=True)
         return Response(serializer.data)
 
 

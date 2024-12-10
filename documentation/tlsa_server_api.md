@@ -286,14 +286,40 @@
     [
         {
             "id": 1,
-            "name": "Biology Lecture",
-            "start_time": "2024-01-01T09:00:00Z"
+            "name": "化学1 class1",
+            "start_time": "2024-11-26T14:31:05.453000Z",
+            "locations": [
+            {
+                "lab_id": 2
+            },
+            {
+                "lab_id": 1
+            }
+            ],
+            "teachers": [
+            {
+                "teacher_id": 4
+            }
+            ]
         },
         {
             "id": 2,
-            "name": "Chemistry Lab",
-            "start_time": "2024-01-02T10:00:00Z"
-        }
+            "name": "化学1 class2",
+            "start_time": "2024-12-10T05:21:23Z",
+            "locations": [
+            {
+                "lab_id": 2
+            }
+            ],
+            "teachers": [
+            {
+                "teacher_id": 4
+            },
+            {
+                "teacher_id": 5
+            }
+            ]
+        },
     ]
     ```
 
