@@ -34,7 +34,7 @@ class ManagerDetailSerializer(serializers.ModelSerializer):
         model = ManageLab
         fields = ['manager_id', 'manager_name', 'manager_email', 'lab_id']
 
-class LabOutputSerializer(serializers.ModelSerializer):
+class LabGetSerializer(serializers.ModelSerializer):
     managers = serializers.SerializerMethodField()
 
     class Meta:
@@ -44,3 +44,10 @@ class LabOutputSerializer(serializers.ModelSerializer):
     def get_managers(self, obj):
         manage_labs = ManageLab.objects.filter(lab=obj)
         return ManagerDetailSerializer(manage_labs, many=True).data
+    
+class LabPatchSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = Lab
+        fields = ['id', 'name', 'location']

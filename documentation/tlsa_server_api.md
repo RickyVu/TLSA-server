@@ -298,7 +298,8 @@
             ],
             "teachers": [
             {
-                "teacher_id": 4
+                "teacher_id": 4,
+                "teacher_name": "chem1"
             }
             ]
         },
@@ -313,10 +314,12 @@
             ],
             "teachers": [
             {
-                "teacher_id": 4
+                "teacher_id": 4,
+                "teacher_name": "chem1"
             },
             {
-                "teacher_id": 5
+                "teacher_id": 5,
+                "teacher_name": "chem2"
             }
             ]
         },
