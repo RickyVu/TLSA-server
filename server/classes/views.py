@@ -11,6 +11,7 @@ from .serializers import (ClassSerializer,
                           TeachClassSerializer, 
                           ClassLocationSerializer,
                           ClassCommentSerializer)
+from courses.models import (CourseClass)
 
 class ClassView(APIView):
     serializer_class = ClassSerializer
@@ -51,6 +52,13 @@ class ClassView(APIView):
                 description='Class name to retrieve (similarity)',
                 required=False,
             ),
+            OpenApiParameter(
+                name='course',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Course ID to retrieve classes for',
+                required=False,
+            ),
         ],
         responses={
             200: ClassSerializer(many=True),
@@ -59,12 +67,17 @@ class ClassView(APIView):
     def get(self, request, format=None):
         class_id = request.query_params.get('class_id')
         class_name = request.query_params.get('class_name')
+        course_id = request.query_params.get('course')
 
         filters = {}
         if class_id:
             filters["id"] = class_id
         if class_name:
             filters["name__icontains"] = class_name
+
+        if course_id:
+            course_classes = CourseClass.objects.filter(course_id=course_id).values_list('class_instance_id', flat=True)
+            filters["id__in"] = course_classes
 
         classes = Class.objects.filter(**filters)
 
