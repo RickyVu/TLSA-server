@@ -54,7 +54,7 @@ class ClassView(APIView):
                 required=False,
             ),
             OpenApiParameter(
-                name='course',
+                name='course_id',
                 type=int,
                 location=OpenApiParameter.QUERY,
                 description='Course ID to retrieve classes for',
