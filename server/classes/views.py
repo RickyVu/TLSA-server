@@ -12,6 +12,7 @@ from .serializers import (ClassSerializer,
                           TeachClassSerializer, 
                           ClassLocationSerializer,
                           ClassOutputSerializer,
+                          ClassPatchSerializer,
                           ClassCommentSerializer, ClassCommentWithoutSenderSerializer)
 from courses.models import (CourseClass, CourseEnrollment)
 from labs.models import (ManageLab)
@@ -97,7 +98,6 @@ class ClassView(APIView):
             filters["id__in"] = course_classes
 
         if personal and personal.lower() == "true":
-            print(user.role)
             if user.role == "student":
                 # Get courses that the user is enrolled in
                 enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
@@ -118,6 +118,28 @@ class ClassView(APIView):
         classes = Class.objects.filter(**filters)
         serializer = serializer_class(classes, many=True)
         return Response(serializer.data)
+    
+    @extend_schema(
+        request=ClassPatchSerializer,
+    )
+    def patch(self, request, format=None):
+        class_id = request.data.get('id')
+        try:
+            class_instance = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({"message": "Class not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ClassPatchSerializer(class_instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Class updated successfully.",
+                    "class": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeacherClassView(APIView):

@@ -76,36 +76,44 @@ class UserInfoView(APIView):
                 type=int,
                 location=OpenApiParameter.QUERY,
                 description='User ID to retrieve information for',
-                required=True,
+                required=False,
+            ),
+            OpenApiParameter(
+                name='role',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter users by role (student/teacher/manager)',
+                required=False,
             ),
         ],
         responses={
-            200: serializer_class,
+            200: TLSAUserSerializer(many=True),
             404: None,
             403: None,
         },
     )
     def get(self, request):
         user_id = request.query_params.get('user_id')
+        role = request.query_params.get('role')
 
-        if not user_id:
-            return Response({"error": "user_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+        filters = {}
+        if user_id:
+            filters["id"] = user_id
+        if role:
+            filters["role"] = role
 
         User = get_user_model()
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        users = User.objects.filter(**filters)
 
         # Check if the requesting user is allowed to view the information
-        if request.user.role in ['teacher', 'manager']:
+        if request.user.role in ['teacher', 'manager', 'student']:    # Frontend request for student to also be able to view everyone's data
             # Teachers and managers can view any user's information
-            serializer = self.serializer_class(user)
+            serializer = self.serializer_class(users, many=True)
             return Response(serializer.data)
         elif request.user.role == 'student':
             # Students can only view their own information
-            if str(request.user.id) == user_id:
-                serializer = self.serializer_class(user)
+            if user_id and str(request.user.id) == user_id:
+                serializer = self.serializer_class(users, many=True)
                 return Response(serializer.data)
             else:
                 return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
