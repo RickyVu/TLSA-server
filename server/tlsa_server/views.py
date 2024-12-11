@@ -7,7 +7,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.views import APIView
-from .serializers import TLSAUserSerializer, UserRegistrationSerializer, UserLoginSerializer, RefreshTokenSerializer
+from .serializers import TLSAUserSerializer, UserRegistrationSerializer, UserLoginSerializer, RefreshTokenSerializer, UserInfoPatchSerializer
 
 class RegisterView(APIView):
     """Register a new user."""
@@ -119,6 +119,33 @@ class UserInfoView(APIView):
                 return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        request=UserInfoPatchSerializer,
+    )
+    def patch(self, request, format=None):
+        user_id = request.data.get('id')
+        User = get_user_model()
+        try:
+            user_instance = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if the requesting user is allowed to update the user information
+        if request.user.role in ['teacher', 'manager'] or request.user.id == user_id:
+            serializer = UserInfoPatchSerializer(user_instance, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                        "message": "User information updated successfully.",
+                        "user": serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
 
 class ValidateTokenView(APIView):
     """Validate a JWT token."""
