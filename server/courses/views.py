@@ -4,7 +4,7 @@ from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, CourseEnrollment
-from .serializers import CourseSerializer, CourseEnrollmentSerializer, CourseClassSerializer
+from .serializers import CourseSerializer, CourseEnrollmentSerializer, CourseClassSerializer, CoursePatchSerializer
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
 from classes.models import (TeachClass, ClassLocation)
 from labs.models import (ManageLab)
@@ -97,6 +97,40 @@ class CourseView(APIView):
         courses = Course.objects.filter(**filters)
         serializer = self.serializer_class(courses, many=True)
         return Response(serializer.data)
+    
+    def patch(self, request, format=None):
+        try:
+            course = Course.objects.get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(course, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Course updated successfully.", "course": serializer.data})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @extend_schema(
+        request=CoursePatchSerializer,
+    )
+    def patch(self, request, format=None):
+        course_id = request.data.get('id')
+        try:
+            course_instance = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({"message": "Class not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CoursePatchSerializer(course_instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Course updated successfully.",
+                    "course": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CourseEnrollmentView(APIView):
     serializer_class = CourseEnrollmentSerializer
