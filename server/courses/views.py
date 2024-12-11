@@ -19,6 +19,8 @@ class CourseView(APIView):
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
             return [IsTeacher()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher()]
         return []
 
     def post(self, request, format=None):
@@ -106,7 +108,7 @@ class CourseView(APIView):
         try:
             course_instance = Course.objects.get(id=course_id)
         except Course.DoesNotExist:
-            return Response({"message": "Class not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = CoursePatchSerializer(course_instance, data=request.data, partial=True)
         if serializer.is_valid():

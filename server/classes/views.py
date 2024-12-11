@@ -25,6 +25,8 @@ class ClassView(APIView):
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
             return [IsTeacher()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher()]
         return []
 
     @extend_schema(
