@@ -6,6 +6,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, CourseEnrollment
 from .serializers import CourseSerializer, CourseEnrollmentSerializer, CourseClassSerializer
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
+from classes.models import (TeachClass, ClassLocation)
+from labs.models import (ManageLab)
+from courses.models import (CourseClass)
 
 class CourseView(APIView):
     serializer_class = CourseSerializer
@@ -71,10 +74,25 @@ class CourseView(APIView):
         if course_name:
             filters["name__icontains"] = course_name
 
-        if personal and personal.lower()=="true":
-            # Get courses that the user is enrolled in
-            enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
-            filters["id__in"] = enrolled_courses
+        if personal and personal.lower() == "true":
+            if user.role == "student":
+                # Get courses that the user is enrolled in
+                enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
+                filters["id__in"] = enrolled_courses
+            elif user.role == "teacher":
+                # Get classes that the teacher teaches
+                taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
+                # Get courses that have these classes
+                taught_courses = CourseClass.objects.filter(class_instance_id__in=taught_classes).values_list('course_id', flat=True)
+                filters["id__in"] = taught_courses
+            elif user.role == "manager":
+                # Get labs that the manager manages
+                managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
+                # Get classes that are situated in the managed labs
+                managed_classes = ClassLocation.objects.filter(lab_id__in=managed_labs).values_list('class_id', flat=True)
+                # Get courses that have these classes
+                managed_courses = CourseClass.objects.filter(class_instance_id__in=managed_classes).values_list('course_id', flat=True)
+                filters["id__in"] = managed_courses
 
         courses = Course.objects.filter(**filters)
         serializer = self.serializer_class(courses, many=True)
