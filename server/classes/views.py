@@ -19,6 +19,7 @@ from labs.models import (ManageLab)
 
 class ClassView(APIView):
     authentication_classes = [JWTAuthentication]
+    serializer_class = ClassSerializer
 
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -82,7 +83,6 @@ class ClassView(APIView):
         },
     )
     def get(self, request, format=None):
-        serializer_class = ClassOutputSerializer
         class_id = request.query_params.get('class_id')
         class_name = request.query_params.get('class_name')
         course_id = request.query_params.get('course_id')
@@ -90,6 +90,8 @@ class ClassView(APIView):
         user = request.user
 
         filters = {}
+        id_in_filters = None
+
         if class_id:
             filters["id"] = class_id
         if class_name:
@@ -97,28 +99,26 @@ class ClassView(APIView):
 
         if course_id:
             course_classes = CourseClass.objects.filter(course_id=course_id).values_list('class_instance_id', flat=True)
-            filters["id__in"] = course_classes
+            id_in_filters = set(course_classes) if id_in_filters is None else id_in_filters.intersection(course_classes)
 
         if personal and personal.lower() == "true":
             if user.role == "student":
-                # Get courses that the user is enrolled in
                 enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
-                # Get classes that belong to the enrolled courses
                 enrolled_classes = CourseClass.objects.filter(course_id__in=enrolled_courses).values_list('class_instance_id', flat=True)
-                filters["id__in"] = enrolled_classes
+                id_in_filters = set(enrolled_classes) if id_in_filters is None else id_in_filters.intersection(enrolled_classes)
             elif user.role == "teacher":
-                # Get classes that the teacher teaches
                 taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
-                filters["id__in"] = taught_classes
+                id_in_filters = set(taught_classes) if id_in_filters is None else id_in_filters.intersection(taught_classes)
             elif user.role == "manager":
-                # Get labs that the manager manages
                 managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
-                # Get classes that are situated in the managed labs
                 managed_classes = ClassLocation.objects.filter(lab_id__in=managed_labs).values_list('class_id', flat=True)
-                filters["id__in"] = managed_classes
+                id_in_filters = set(managed_classes) if id_in_filters is None else id_in_filters.intersection(managed_classes)
+
+        if id_in_filters is not None:
+            filters["id__in"] = list(id_in_filters)
 
         classes = Class.objects.filter(**filters)
-        serializer = serializer_class(classes, many=True)
+        serializer = self.serializer_class(classes, many=True)
         return Response(serializer.data)
     
     @extend_schema(
