@@ -98,18 +98,6 @@ class CourseView(APIView):
         serializer = self.serializer_class(courses, many=True)
         return Response(serializer.data)
     
-    def patch(self, request, format=None):
-        try:
-            course = Course.objects.get(pk=pk)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = self.serializer_class(course, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Course updated successfully.", "course": serializer.data})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
     @extend_schema(
         request=CoursePatchSerializer,
     )
