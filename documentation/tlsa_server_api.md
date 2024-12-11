@@ -67,7 +67,9 @@
     ```json
     {
         "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "role": "student",
+        "id": 1
     }
     ```
 ---
