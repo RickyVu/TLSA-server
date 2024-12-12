@@ -17,7 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
-from .views import RegisterView, LoginView, ValidateTokenView, RefreshTokenView, VerifyView
+from .views import (RegisterView, 
+                    LoginView, 
+                    UserInfoView, 
+                    ValidateTokenView, 
+                    RefreshTokenView, 
+                    VerifyView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,8 +32,9 @@ urlpatterns = [
     path('api/v1/docs/redoc/', SpectacularRedocView.as_view(), name='redoc-ui'),
     
     # Authentication
-    path('api/v1/register/', RegisterView.as_view(), name='register'),
-    path('api/v1/login/', LoginView.as_view(), name='login'),
+    path('api/v1/users/register/', RegisterView.as_view(), name='register'),
+    path('api/v1/users/login/', LoginView.as_view(), name='login'),
+    path('api/v1/users/user-info', UserInfoView.as_view(), name='user-info'),
     path('api/v1/token/validate/', ValidateTokenView.as_view(), name='validate-token'),
     path('api/v1/refresh-token/', RefreshTokenView.as_view(), name='refresh-token'),
     path('api/v1/verify/', VerifyView.as_view(), name='verify'),

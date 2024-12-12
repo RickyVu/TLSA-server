@@ -10,6 +10,13 @@ class CourseSerializer(serializers.ModelSerializer):
 
     course_id = serializers.IntegerField(source='id', read_only=True)
 
+class CoursePatchSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=True)
+
+    class Meta:
+        model = Class
+        fields = ['id', 'name']
+
 class CourseEnrollmentSerializer(serializers.ModelSerializer):
     student_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True)
     course_id = serializers.IntegerField(write_only=True)

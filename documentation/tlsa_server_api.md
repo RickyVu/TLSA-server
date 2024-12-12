@@ -36,17 +36,21 @@
     }
     ```
 
-**Get User**
-- **URL**: `GET /api/v1/users?id=2021000000`
+- **URL**: `GET /api/v1/users/user-info?user_id=1`
+- Query params:
+    - user_id
+- Permissions:
+    - If student, can only view personal info, cannot view info of other students
+    - If teacher or manager, then can view all personal info
 - **Response JSON**:
     ```json
     {
-        "id": "2021000000",
-        "name": "name",
-        "email": "e@mail.com",
-        "role": "student",
-        "created_at": "2024-01-01T12:00:00Z",
-        "updated_at": "2024-01-01T12:00:00Z"
+        "id": 1,
+        "username": "john_doe",
+        "email": "john.doe@example.com",
+        "first_name": "John",
+        "last_name": "Doe",
+        "role": "student"
     }
     ```
 
@@ -63,7 +67,9 @@
     ```json
     {
         "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "role": "student",
+        "id": 1
     }
     ```
 ---
@@ -100,14 +106,27 @@
     ```json
     [
         {
-            "lab_id": 1,
-            "name": "Organic Chemistry Lab Room 1",
-            "location": "Chemistry Building"
+            "id": 2,
+            "name": "基础化学实验1",
+            "managers": []
         },
         {
-            "lab_id": 2,
-            "name": "Organic Chemistry Lab Room 1",
-            "location": "New Chemistry Building"
+            "id": 1,
+            "name": "基础化学实验2",
+            "managers": [
+            {
+                "manager_id": 4,
+                "manager_name": "chem1",
+                "manager_email": "",
+                "lab_id": 1
+            },
+            {
+                "manager_id": 5,
+                "manager_name": "chem2",
+                "manager_email": "",
+                "lab_id": 1
+            }
+            ]
         }
     ]
     ```
@@ -178,10 +197,11 @@
     ```
 
 **Get Course**
-- **URL**: `GET /api/v1/courses/course?course_id=1&course_name=Chemistry`
+- **URL**: `GET /api/v1/courses/course?course_id=1&course_name=Chemistry&personal=false`
 - Query params:
     - course_id
     - course_name (similarity)
+    - personal (boolean)
 - **Response JSON**:
     ```json
     [
@@ -258,23 +278,53 @@
     ```
 
 **Get Class**
-- **URL**: `GET /api/v1/classes/class?class_id=1&class_name=Biology`
+- **URL**: `GET /api/v1/classes/class?class_id=1&class_name=Biology&course_id=1`
 - Query params:
     - class_id
     - class_name (similarity)
+    - course_id
 - **Response JSON**:
     ```json
     [
         {
             "id": 1,
-            "name": "Biology Lecture",
-            "start_time": "2024-01-01T09:00:00Z"
+            "name": "化学1 class1",
+            "start_time": "2024-11-26T14:31:05.453000Z",
+            "locations": [
+            {
+                "lab_id": 2
+            },
+            {
+                "lab_id": 1
+            }
+            ],
+            "teachers": [
+            {
+                "teacher_id": 4,
+                "teacher_name": "chem1"
+            }
+            ]
         },
         {
             "id": 2,
-            "name": "Chemistry Lab",
-            "start_time": "2024-01-02T10:00:00Z"
-        }
+            "name": "化学1 class2",
+            "start_time": "2024-12-10T05:21:23Z",
+            "locations": [
+            {
+                "lab_id": 2
+            }
+            ],
+            "teachers": [
+            {
+                "teacher_id": 4,
+                "teacher_name": "chem1"
+            },
+            {
+                "teacher_id": 5,
+                "teacher_name": "chem2"
+            }
+            ]
+        },
     ]
     ```
 
@@ -361,7 +411,6 @@
 - **Request JSON**:
     ```json
     {
-        "sender_id": "2021000000",
         "class_id": 1,
         "content": "Great class!"
     }

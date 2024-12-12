@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
 from .models import (Class, 
@@ -10,9 +11,14 @@ from .models import (Class,
 from .serializers import (ClassSerializer, 
                           TeachClassSerializer, 
                           ClassLocationSerializer,
-                          ClassCommentSerializer)
+                          ClassOutputSerializer,
+                          ClassPatchSerializer,
+                          ClassCommentSerializer, ClassCommentWithoutSenderSerializer)
+from courses.models import (CourseClass, CourseEnrollment)
+from labs.models import (ManageLab)
 
 class ClassView(APIView):
+    authentication_classes = [JWTAuthentication]
     serializer_class = ClassSerializer
 
     def get_permissions(self):
@@ -20,10 +26,16 @@ class ClassView(APIView):
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
             return [IsTeacher()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher()]
         return []
 
+    @extend_schema(
+        request=ClassSerializer,
+    )
     def post(self, request, format=None):
-        serializer = self.serializer_class(data=request.data)
+        serializer_class = ClassSerializer
+        serializer = serializer_class(data=request.data)
         if serializer.is_valid():
             class_instance = serializer.save()
             return Response(
@@ -51,6 +63,20 @@ class ClassView(APIView):
                 description='Class name to retrieve (similarity)',
                 required=False,
             ),
+            OpenApiParameter(
+                name='course_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Course ID to retrieve classes for',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='personal',
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                description='Get personal classes',
+                required=False,
+            ),
         ],
         responses={
             200: ClassSerializer(many=True),
@@ -59,22 +85,71 @@ class ClassView(APIView):
     def get(self, request, format=None):
         class_id = request.query_params.get('class_id')
         class_name = request.query_params.get('class_name')
+        course_id = request.query_params.get('course_id')
+        personal = request.query_params.get('personal')
+        user = request.user
 
         filters = {}
+        id_in_filters = None
+
         if class_id:
             filters["id"] = class_id
         if class_name:
             filters["name__icontains"] = class_name
 
-        classes = Class.objects.filter(**filters)
+        if course_id:
+            course_classes = CourseClass.objects.filter(course_id=course_id).values_list('class_instance_id', flat=True)
+            id_in_filters = set(course_classes) if id_in_filters is None else id_in_filters.intersection(course_classes)
 
+        if personal and personal.lower() == "true":
+            if user.role == "student":
+                enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
+                enrolled_classes = CourseClass.objects.filter(course_id__in=enrolled_courses).values_list('class_instance_id', flat=True)
+                id_in_filters = set(enrolled_classes) if id_in_filters is None else id_in_filters.intersection(enrolled_classes)
+            elif user.role == "teacher":
+                taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
+                id_in_filters = set(taught_classes) if id_in_filters is None else id_in_filters.intersection(taught_classes)
+            elif user.role == "manager":
+                managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
+                managed_classes = ClassLocation.objects.filter(lab_id__in=managed_labs).values_list('class_id', flat=True)
+                id_in_filters = set(managed_classes) if id_in_filters is None else id_in_filters.intersection(managed_classes)
+
+        if id_in_filters is not None:
+            filters["id__in"] = list(id_in_filters)
+
+        classes = Class.objects.filter(**filters)
         serializer = self.serializer_class(classes, many=True)
         return Response(serializer.data)
+    
+    @extend_schema(
+        request=ClassPatchSerializer,
+    )
+    def patch(self, request, format=None):
+        class_id = request.data.get('id')
+        try:
+            class_instance = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({"message": "Class not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ClassPatchSerializer(class_instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    "message": "Class updated successfully.",
+                    "class": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TeacherClassView(APIView):
     serializer_class = TeachClassSerializer
 
+    @extend_schema(
+        request=TeachClassSerializer,
+    )
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -128,6 +203,9 @@ class TeacherClassView(APIView):
 class ClassLocationView(APIView):
     serializer_class = ClassLocationSerializer
 
+    @extend_schema(
+        request=ClassLocationSerializer,
+    )
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -178,11 +256,18 @@ class ClassLocationView(APIView):
         return Response(serializer.data)
 
 class CommentToClassView(APIView):
-    serializer_class = ClassCommentSerializer
-
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    @extend_schema(
+        request=ClassCommentWithoutSenderSerializer,
+    )
     def post(self, request, format=None):
-        serializer = self.serializer_class(data=request.data)
+        serializer_class = ClassCommentWithoutSenderSerializer
+        serializer = serializer_class(data=request.data)
         if serializer.is_valid():
+            # Set the sender_id to the authenticated user's ID
+            serializer.validated_data['sender_id'] = request.user
             serializer.save()
             return Response(
                 {
@@ -215,6 +300,7 @@ class CommentToClassView(APIView):
         },
     )
     def get(self, request, format=None):
+        serializer_class = ClassCommentSerializer
         class_id = request.query_params.get('class_id')
         sender_id = request.query_params.get('sender_id')
 
@@ -225,5 +311,5 @@ class CommentToClassView(APIView):
             filters["sender_id"] = sender_id
 
         comments = ClassComment.objects.filter(**filters)
-        serializer = self.serializer_class(comments, many=True)
+        serializer = serializer_class(comments, many=True)
         return Response(serializer.data)
