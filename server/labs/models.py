@@ -4,6 +4,9 @@ from tlsa_server.models import TLSA_User
 class Lab(models.Model):
     name = models.CharField(max_length=100, unique=True)
     location = models.CharField(max_length=255)
+    safety_equipments = models.JSONField(default=list, blank=True, null=True)
+    safety_notes = models.TextField(blank=True, null=True)
+    lab_image = models.ImageField(upload_to='lab_images/', blank=True, null=True)
     def __str__(self):
         return self.name
 

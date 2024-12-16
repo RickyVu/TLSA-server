@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 class TLSAUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TLSA_User
-        fields = ['id', 'username', 'email', 'role', 'profile_picture']
+        fields = ['id', 'username', 'email', 'role', 'phone_number', 'profile_picture']
 
 class UserRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
@@ -32,11 +32,12 @@ class RefreshTokenSerializer(serializers.Serializer):
 class UserInfoPatchSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=True)
     password = serializers.CharField(write_only=True, required=False)
+    phone_number = serializers.CharField(required=False)
     profile_picture = serializers.ImageField(required=False)
 
     class Meta:
         model = TLSA_User
-        fields = ['id', 'username', 'email', 'password', 'profile_picture']
+        fields = ['id', 'username', 'email', 'password', 'phone_number', 'profile_picture']
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)

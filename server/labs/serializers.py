@@ -5,7 +5,7 @@ from tlsa_server.models import TLSA_User
 class LabSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lab
-        fields = ['lab_id', 'name', 'location']
+        fields = ['lab_id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image']
 
     lab_id = serializers.IntegerField(source='id', read_only=True)
 
@@ -27,19 +27,20 @@ class ManageLabSerializer(serializers.ModelSerializer):
 class ManagerDetailSerializer(serializers.ModelSerializer):
     manager_id = serializers.IntegerField(source='manager.id')
     manager_name = serializers.CharField(source='manager.username')
+    manager_phone = serializers.CharField(source='manager.phone_number')
     manager_email = serializers.EmailField(source='manager.email')
     lab_id = serializers.IntegerField(source='lab.id')
 
     class Meta:
         model = ManageLab
-        fields = ['manager_id', 'manager_name', 'manager_email', 'lab_id']
+        fields = ['manager_id', 'manager_name', 'manager_phone', 'manager_email', 'lab_id']
 
 class LabGetSerializer(serializers.ModelSerializer):
     managers = serializers.SerializerMethodField()
 
     class Meta:
         model = Lab
-        fields = ['id', 'name', 'managers']
+        fields = ['id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image', 'managers']
 
     def get_managers(self, obj):
         manage_labs = ManageLab.objects.filter(lab=obj)
@@ -50,4 +51,4 @@ class LabPatchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lab
-        fields = ['id', 'name', 'location']
+        fields = ['id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image']

@@ -153,5 +153,5 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-MEDIA_URL = '/media/'
+MEDIA_URL = 'http://localhost:5000/media/'
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'nginx', 'media')
