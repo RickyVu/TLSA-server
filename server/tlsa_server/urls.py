@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from .views import (RegisterView, 
                     LoginView, 
@@ -46,4 +47,6 @@ urlpatterns = [
     path('api/v1/notices/', include('notices.urls'))
 ]
 
+# if settings.DEBUG:
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 ##swagger:   http://127.0.0.1:8000/api/v1/docs/swagger/

@@ -26,8 +26,7 @@ allowed_hosts.py
 postgres_settings.py
 
 # Static files
-/static/
-media/
+server/static/
 
 # Environment variables
 .env
@@ -36,3 +35,4 @@ media/
 .vscode/
 deployment/
 local/
+nginx/

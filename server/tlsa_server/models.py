@@ -9,3 +9,4 @@ class TLSA_User(AbstractUser):
     )
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)

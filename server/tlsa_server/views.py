@@ -18,12 +18,13 @@ class RegisterView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
+            profile_picture = serializer.validated_data.get('profile_picture')
 
             User = get_user_model()
             if User.objects.filter(username=username).exists():
                 return Response({"error": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-            user = User(username=username)
+            user = User(username=username, profile_picture=profile_picture)
             user.set_password(password)
             user.role = "student"
             user.save()
@@ -106,12 +107,10 @@ class UserInfoView(APIView):
         users = User.objects.filter(**filters)
 
         # Check if the requesting user is allowed to view the information
-        if request.user.role in ['teacher', 'manager', 'student']:    # Frontend request for student to also be able to view everyone's data
-            # Teachers and managers can view any user's information
+        if request.user.role in ['teacher', 'manager', 'student']:
             serializer = self.serializer_class(users, many=True)
             return Response(serializer.data)
         elif request.user.role == 'student':
-            # Students can only view their own information
             if user_id and str(request.user.id) == user_id:
                 serializer = self.serializer_class(users, many=True)
                 return Response(serializer.data)
