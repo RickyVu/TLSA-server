@@ -1,6 +1,4 @@
 from django.db import models
-
-from django.db import models
 from tlsa_server.models import TLSA_User
 
 class Notice(models.Model):
@@ -41,11 +39,25 @@ class NoticeCompletion(models.Model):
         return f"Notice {self.notice.id} completed by {self.user.user_id}"
 
 class NoticeContent(models.Model):
-    content = models.TextField()
-    content_type = models.CharField(max_length=50)
+    CONTENT_TYPE_CHOICES = [
+        ('text', 'Text'),
+        ('image', 'Image'),
+        ('file', 'File'),
+    ]
+
+    content_type = models.CharField(max_length=10, choices=CONTENT_TYPE_CHOICES)
+    text_content = models.TextField(blank=True, null=True)  # For text content
+    image_content = models.ImageField(upload_to='notice_images/', blank=True, null=True)  # For image content
+    file_content = models.FileField(upload_to='notice_files/', blank=True, null=True)  # For file content
+
+    def __str__(self):
+        return f"Content {self.id} ({self.content_type})"
 
 class NoticeTag(models.Model):
     tag_name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.tag_name
 
 class NoticeContentTag(models.Model):
     notice_content_id = models.ForeignKey(NoticeContent, on_delete=models.CASCADE)

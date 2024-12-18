@@ -77,7 +77,6 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
             enrollment = CourseEnrollment.objects.create(
                 student=student,
                 course=course,
-                course_sequence=course_sequence
             )
             enrollments.append(enrollment)
         return enrollments
@@ -93,12 +92,12 @@ class CourseClassSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         class_id = validated_data.pop('class_instance')['id']
-        course_code = validated_data.pop('course')['course_code']
-        course_sequence = validated_data.pop('course')['course_sequence']
+        course = validated_data.pop('course')
+        course_code = course['course_code']
+        course_sequence = course['course_sequence']
         class_instance = Class.objects.get(id=class_id)
         course = Course.objects.get(course_code=course_code, course_sequence=course_sequence)
         return CourseClass.objects.create(
             class_instance=class_instance,
             course=course,
-            course_sequence=course_sequence
         )

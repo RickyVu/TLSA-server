@@ -158,10 +158,6 @@ class CourseClassView(APIView):
             return Response(
                 {
                     "message": "Class added to course successfully.",
-                    "course_class": {
-                        "class_id": course_class.class_instance.id,
-                        "course_id": course_class.course.id
-                    }
                 },
                 status=status.HTTP_201_CREATED
             )
