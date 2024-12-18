@@ -67,7 +67,7 @@ class NoticeContentTag(models.Model):
         unique_together = ('notice_content_id', 'notice_tag_id')
 
 class NoticeRow(models.Model):
-    notice_id = models.ForeignKey(Notice, on_delete=models.CASCADE)
+    notice_id = models.ForeignKey(Notice, on_delete=models.CASCADE, related_name='rows')
     notice_content_id = models.ForeignKey(NoticeContent, on_delete=models.CASCADE)
     order_num = models.IntegerField()
 
