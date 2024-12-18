@@ -14,21 +14,17 @@ class TeachClassSerializer(serializers.ModelSerializer):
         model = TeachClass
         fields = ['class_id', 'teacher_id']
 
-    teacher_id = serializers.CharField()
+    teacher_id = serializers.CharField(source='teacher_id.user_id')
 
     def create(self, validated_data):
-        print(validated_data)
-        # Extract the `user_id` from the `teacher_id` field
-        user_id = validated_data.pop('teacher_id')
+        user_id = validated_data.pop('teacher_id')["user_id"]
 
-        # Retrieve the `TLSA_User` instance using the `user_id`
         user_model = get_user_model()
         try:
             teacher = user_model.objects.get(user_id=user_id)
         except user_model.DoesNotExist:
             raise serializers.ValidationError({"teacher_id": "Invalid user_id. TLSA_User does not exist."})
 
-        # Create the `TeachClass` instance with the `TLSA_User` instance
         teach_class = TeachClass.objects.create(
             teacher_id=teacher,
             **validated_data
