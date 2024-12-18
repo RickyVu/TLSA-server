@@ -21,13 +21,13 @@ class ClassLocation(models.Model):
 
 class TeachClass(models.Model):
     class_id = models.ForeignKey(Class, on_delete=models.CASCADE)
-    teacher_id = models.ForeignKey(TLSA_User, on_delete=models.CASCADE)
+    teacher_id = models.ForeignKey(TLSA_User, to_field='user_id', on_delete=models.CASCADE)
 
     def __str__(self):
         return f"Teacher {self.teacher_id} teaches Class {self.class_id}"
 
 class ClassComment(models.Model):
-    sender_id = models.ForeignKey(TLSA_User, on_delete=models.CASCADE)
+    sender_id = models.ForeignKey(TLSA_User, to_field='user_id', on_delete=models.CASCADE)
     class_id = models.ForeignKey(Class, on_delete=models.CASCADE)
     sent_time = models.DateTimeField(auto_now_add=True)
     content = models.TextField()

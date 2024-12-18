@@ -10,22 +10,22 @@ class LabSerializer(serializers.ModelSerializer):
     lab_id = serializers.IntegerField(source='id', read_only=True)
 
 class ManageLabSerializer(serializers.ModelSerializer):
-    manager_id = serializers.IntegerField(source='manager.id')
+    manager_user_id = serializers.CharField(source='manager.user_id')
     lab_id = serializers.IntegerField(source='lab.id')
 
     class Meta:
         model = ManageLab
-        fields = ['manager_id', 'lab_id']
+        fields = ['manager_user_id', 'lab_id']
 
     def create(self, validated_data):
-        manager_id = validated_data.pop('manager')['id']
+        manager_user_id = validated_data.pop('manager')['user_id']
         lab_id = validated_data.pop('lab')['id']
-        manager = TLSA_User.objects.get(id=manager_id)
+        manager = TLSA_User.objects.get(user_id=manager_user_id)
         lab = Lab.objects.get(id=lab_id)
         return ManageLab.objects.create(manager=manager, lab=lab)
     
 class ManagerDetailSerializer(serializers.ModelSerializer):
-    manager_id = serializers.IntegerField(source='manager.id')
+    manager_user_id = serializers.CharField(source='manager.user_id')
     manager_name = serializers.CharField(source='manager.username')
     manager_phone = serializers.CharField(source='manager.phone_number')
     manager_email = serializers.EmailField(source='manager.email')
@@ -33,7 +33,7 @@ class ManagerDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ManageLab
-        fields = ['manager_id', 'manager_name', 'manager_phone', 'manager_email', 'lab_id']
+        fields = ['manager_user_id', 'manager_name', 'manager_phone', 'manager_email', 'lab_id']
 
 class LabGetSerializer(serializers.ModelSerializer):
     managers = serializers.SerializerMethodField()

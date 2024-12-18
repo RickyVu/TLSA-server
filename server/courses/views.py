@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import permission_classes
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, CourseEnrollment
 from .serializers import CourseSerializer, CourseEnrollmentSerializer, CourseClassSerializer, CoursePatchSerializer
@@ -17,14 +17,17 @@ class CourseView(APIView):
 
     @permission_classes([IsAuthenticated])
     def get(self, request, format=None):
-        course_id = request.query_params.get('course_id')
+        course_code = request.query_params.get('course_code')
+        course_sequence = request.query_params.get('course_sequence')
         course_name = request.query_params.get('course_name')
         personal = request.query_params.get('personal')
         user = request.user
 
         filters = {}
-        if course_id:
-            filters["id"] = course_id
+        if course_code:
+            filters["course_code"] = course_code
+        if course_sequence:
+            filters["course_sequence"] = course_sequence
         if course_name:
             filters["name__icontains"] = course_name
 
@@ -38,17 +41,17 @@ class CourseView(APIView):
     def _get_personal_courses_filters(self, user):
         filters = {}
         if user.role == "student":
-            enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
-            filters["id__in"] = enrolled_courses
+            enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course__course_code', 'course__course_sequence')
+            filters["course_code__in"], filters["course_sequence__in"] = zip(*enrolled_courses)
         elif user.role == "teacher":
             taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
-            taught_courses = CourseClass.objects.filter(class_instance_id__in=taught_classes).values_list('course_id', flat=True)
-            filters["id__in"] = taught_courses
+            taught_courses = CourseClass.objects.filter(class_instance_id__in=taught_classes).values_list('course__course_code', 'course__course_sequence')
+            filters["course_code__in"], filters["course_sequence__in"] = zip(*taught_courses)
         elif user.role == "manager":
             managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
             managed_classes = ClassLocation.objects.filter(lab_id__in=managed_labs).values_list('class_id', flat=True)
-            managed_courses = CourseClass.objects.filter(class_instance_id__in=managed_classes).values_list('course_id', flat=True)
-            filters["id__in"] = managed_courses
+            managed_courses = CourseClass.objects.filter(class_instance_id__in=managed_classes).values_list('course__course_code', 'course__course_sequence')
+            filters["course_code__in"], filters["course_sequence__in"] = zip(*managed_courses)
         return filters
 
     @permission_classes([IsTeacher])
@@ -70,9 +73,12 @@ class CourseView(APIView):
         request=CoursePatchSerializer,
     )
     def patch(self, request, format=None):
-        course_id = request.data.get('id')
+        course_code = request.data.get('course_code')
+        course_sequence = request.data.get('course_sequence')
+
+        # Locate the course using the composite key
         try:
-            course_instance = Course.objects.get(id=course_id)
+            course_instance = Course.objects.get(course_code=course_code, course_sequence=course_sequence)
         except Course.DoesNotExist:
             return Response({"message": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -95,6 +101,31 @@ class CourseEnrollmentView(APIView):
         if self.request.method == 'POST':
             return [IsTeacher()]
         return []
+    
+
+    @extend_schema(
+        request=CourseEnrollmentSerializer,
+        responses={
+            201: OpenApiExample(
+                name="Enrollment Success",
+                value={
+                    "message": "Students enrolled successfully.",
+                    "enrollment": {
+                        "student_user_ids": ["2021000000", "2021000001"],
+                        "course_id": 1
+                    }
+                },
+                response_only=True,
+            ),
+            400: OpenApiExample(
+                name="Validation Error",
+                value={
+                    "student_user_ids": ["User with user_id 2021000000 does not exist."]
+                },
+                response_only=True,
+            ),
+        },
+    )
 
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
@@ -104,7 +135,7 @@ class CourseEnrollmentView(APIView):
                 {
                     "message": "Students enrolled successfully.",
                     "enrollment": {
-                        "student_ids": [enrollment.student.id for enrollment in enrollments],
+                        "student_user_ids": [enrollment.student.user_id for enrollment in enrollments],
                         "course_id": enrollments[0].course.id
                     }
                 },

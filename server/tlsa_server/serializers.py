@@ -1,26 +1,41 @@
 from rest_framework import serializers
-from .models import TLSA_User
+from .models import TLSA_User, numeric_validator
 from django.contrib.auth.hashers import make_password
 
 class TLSAUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TLSA_User
-        fields = ['id', 'username', 'email', 'role', 'phone_number', 'profile_picture']
-
+        fields = ['user_id', 'username', 'email', 'role', 'phone_number', 'profile_picture', 'real_name', 'department']
+    
 class UserRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True, write_only=True)
     profile_picture = serializers.ImageField(required=False)
+    real_name = serializers.CharField(required=False)
+    user_id = serializers.CharField(required=True, validators=[numeric_validator])
+    phone_number = serializers.CharField(required=False)
+    department = serializers.CharField(required=False, max_length=50)
 
     def create(self, validated_data):
         profile_picture = validated_data.pop('profile_picture', None)
-        user = TLSA_User.objects.create_user(**validated_data)
+        real_name = validated_data.pop('real_name', None)
+        department = validated_data.pop('department', None)
+        phone_number = validated_data.pop('phone_number', None)
+        user_id = validated_data.pop('user_id')
+
+        user = TLSA_User.objects.create_user(user_id=user_id, **validated_data)
+
         if profile_picture:
             user.profile_picture = profile_picture
-            user.save()
+        if real_name:
+            user.real_name = real_name
+        if department:
+            user.department = department
+        if phone_number:
+            user.phone_number = phone_number
+
+        user.save()
         return user
-
-
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
@@ -28,16 +43,18 @@ class UserLoginSerializer(serializers.Serializer):
 
 class RefreshTokenSerializer(serializers.Serializer):
     refresh = serializers.CharField(required=True)
-
+    
 class UserInfoPatchSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(required=True)
+    user_id = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True, required=False)
     phone_number = serializers.CharField(required=False)
     profile_picture = serializers.ImageField(required=False)
+    real_name = serializers.CharField(required=False)
+    department = serializers.CharField(required=False, max_length=50)
 
     class Meta:
         model = TLSA_User
-        fields = ['id', 'username', 'email', 'password', 'phone_number', 'profile_picture']
+        fields = ['user_id', 'username', 'email', 'password', 'phone_number', 'profile_picture', 'real_name', 'department']
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)

@@ -152,7 +152,7 @@ class LabManagerView(APIView):
                 {
                     "message": "Manager added to lab successfully.",
                     "manager": {
-                        "manager_id": manage_lab.manager.id,
+                        "manager_user_id": manage_lab.manager.user_id,
                         "lab_id": manage_lab.lab.id
                     }
                 },
@@ -187,7 +187,7 @@ class LabManagerView(APIView):
 
         filters = {}
         if lab_id:
-            filters["id"] = lab_id
+            filters["lab_id"] = lab_id
         if manager_name:
             filters["manager__username__icontains"] = manager_name
 
@@ -206,20 +206,20 @@ class LabManagerView(APIView):
                 required=True,
             ),
             OpenApiParameter(
-                name='manager_id',
-                type=int,
+                name='manager_user_id',
+                type=str,
                 location=OpenApiParameter.QUERY,
-                description='Manager ID to delete',
+                description='Manager user_id to delete',
                 required=True,
             ),
         ]
     )
     def delete(self, request, format=None):
         lab_id = request.query_params.get('lab_id')
-        manager_id = request.query_params.get('manager_id')
+        manager_user_id = request.query_params.get('manager_user_id')
 
         try:
-            manage_lab = ManageLab.objects.get(lab_id=lab_id, manager_id=manager_id)
+            manage_lab = ManageLab.objects.get(lab_id=lab_id, manager__user_id=manager_user_id)
         except ManageLab.DoesNotExist:
             return Response({"message": "ManageLab record not found."}, status=status.HTTP_404_NOT_FOUND)
 

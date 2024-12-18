@@ -13,6 +13,8 @@ class TeachClassSerializer(serializers.ModelSerializer):
         model = TeachClass
         fields = ['class_id', 'teacher_id']
 
+    teacher_id = serializers.CharField(source='teacher_id.user_id', read_only=True)
+
 class ClassLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassLocation
@@ -48,6 +50,8 @@ class ClassCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassComment
         fields = ['sender_id', 'class_id', 'content', 'sent_time']
+
+    sender_id = serializers.CharField(source='sender_id.user_id', read_only=True)
 
 class ClassCommentWithoutSenderSerializer(serializers.ModelSerializer):
     class Meta:
