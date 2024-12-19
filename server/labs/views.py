@@ -3,11 +3,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Lab, ManageLab
 from .serializers import LabSerializer, ManageLabSerializer, ManagerDetailSerializer, LabGetSerializer, LabPatchSerializer
+from classes.models import ClassLocation, TeachClass
+from courses.models import CourseClass, CourseEnrollment
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class LabView(APIView):
     serializer_class = LabSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -45,6 +49,13 @@ class LabView(APIView):
                 description='Query by lab_name (similarity)',
                 required=False,
             ),
+            OpenApiParameter(
+                name='personal',
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                description='Get personal labs',
+                required=False,
+            ),
         ],
         responses={
             200: LabSerializer(many=True),
@@ -54,14 +65,31 @@ class LabView(APIView):
         serializer_class = LabGetSerializer
         lab_id = request.query_params.get('lab_id')
         lab_name = request.query_params.get('lab_name')
+        personal = request.query_params.get('personal')
+        user = request.user
 
-        filters = {}
+        labs = Lab.objects.all()
+
         if lab_id:
-            filters["id"] = lab_id
+            labs = labs.filter(id=lab_id)
         if lab_name:
-            filters["name__icontains"] = lab_name
+            labs = labs.filter(name__icontains=lab_name)
+        if personal and personal.lower() == "true":
+            if user.role == "student":
+                enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
+                enrolled_classes = CourseClass.objects.filter(course_id__in=enrolled_courses).values_list('class_instance_id', flat=True)
+                lab_locations = ClassLocation.objects.filter(class_id__in=enrolled_classes).values_list('lab_id', flat=True)
 
-        labs = Lab.objects.filter(**filters)
+                labs = labs.filter(id__in=lab_locations)
+            elif user.role == "teacher":
+                taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
+                lab_locations = ClassLocation.objects.filter(class_id__in=taught_classes).values_list('lab_id', flat=True)
+
+                labs = labs.filter(id__in=lab_locations)
+                
+            elif user.role == "manager":
+                managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
+                labs = labs.filter(id__in=managed_labs)
 
         serializer = serializer_class(labs, many=True)
         return Response(serializer.data)

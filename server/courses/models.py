@@ -44,7 +44,7 @@ class CourseEnrollment(models.Model):
         db_table = 'course_enrollment'
 
     def __str__(self):
-        return f"Student {self.student.user_id} enrolled in Course {self.course.course_code}-{self.course_sequence}"
+        return f"Student {self.student.user_id} enrolled in Course {self.course.course_code}-{self.course.course_sequence}"
 
 class CourseClass(models.Model):
     course = models.ForeignKey(
