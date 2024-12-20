@@ -38,7 +38,7 @@ class UserRegistrationSerializer(serializers.Serializer):
         return user
 
 class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
+    user_id = serializers.CharField(required=True)
     password = serializers.CharField(required=True, write_only=True)
 
 class RefreshTokenSerializer(serializers.Serializer):

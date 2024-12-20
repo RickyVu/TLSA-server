@@ -79,17 +79,17 @@ class LoginView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            username = request.data.get('username')
+            user_id = request.data.get('user_id')
             password = request.data.get('password')
 
             User = get_user_model()
-            if not User.objects.filter(username=username).exists():
-                return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
-
-            user = User.objects.get(username=username)
+            try:
+                user = User.objects.get(user_id=user_id)
+            except User.DoesNotExist:
+                return Response({"error": "Invalid user ID or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
             if not user.check_password(password):
-                return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({"error": "Invalid user ID or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
             refresh = RefreshToken.for_user(user)
             return Response({
