@@ -39,13 +39,6 @@ class CourseEnrollment(models.Model):
     def __str__(self):
         return f"Student {self.student.user_id} enrolled in Course {self.course.course_code}-{self.course.course_sequence}"
 
-    class Meta:
-        unique_together = ('student', 'course')
-        db_table = 'course_enrollment'
-
-    def __str__(self):
-        return f"Student {self.student.user_id} enrolled in Course {self.course.course_code}-{self.course.course_sequence}"
-
 class CourseClass(models.Model):
     course = models.ForeignKey(
         Course,

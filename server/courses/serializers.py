@@ -81,6 +81,15 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
             enrollments.append(enrollment)
         return enrollments
     
+class CourseEnrollmentGetSerializer(serializers.ModelSerializer):
+    student_id = serializers.CharField(source='student.user_id', read_only=True)
+    course_code = serializers.CharField(source='course.course_code', read_only=True)
+    course_sequence = serializers.CharField(source='course.course_sequence', read_only=True)
+
+    class Meta:
+        model = CourseEnrollment
+        fields = ['student_id', 'course_code', 'course_sequence']
+    
 class CourseClassSerializer(serializers.ModelSerializer):
     class_id = serializers.IntegerField(source='class_instance.id', write_only=True)
     course_code = serializers.CharField(source='course.course_code', write_only=True)
