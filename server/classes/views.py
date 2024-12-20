@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
 from .models import (Class, 
                      TeachClass, 
@@ -27,6 +27,8 @@ class ClassView(APIView):
         elif self.request.method == 'POST':
             return [IsTeacher()]
         elif self.request.method == 'PATCH':
+            return [IsTeacher()]
+        elif self.request.method == 'DELETE':
             return [IsTeacher()]
         return []
 
@@ -142,6 +144,42 @@ class ClassView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='class_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Class ID to delete',
+                required=True,
+            ),
+        ],
+        responses={
+            204: OpenApiExample(
+                name="Class deleted",
+                value={"message": "Class deleted successfully."},
+                response_only=True,
+            ),
+            404: OpenApiExample(
+                name="Class not found",
+                value={"message": "Class not found."},
+                response_only=True,
+            ),
+        },
+    )
+    def delete(self, request, format=None):
+        """
+        Delete a class.
+        """
+        class_id = request.query_params.get('class_id')
+        try:
+            class_instance = Class.objects.get(id=class_id)
+        except Class.DoesNotExist:
+            return Response({"message": "Class not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        class_instance.delete()
+        return Response({"message": "Class deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
 class TeacherClassView(APIView):
@@ -199,6 +237,59 @@ class TeacherClassView(APIView):
         serializer = self.serializer_class(teachers, many=True)
         return Response(serializer.data)
     
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='class_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Class ID to delete teacher assignment',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='teacher_id',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Teacher ID to delete assignment',
+                required=True,
+            ),
+        ],
+        responses={
+            204: OpenApiExample(
+                name="Assignment deleted",
+                value={"message": "Teacher assignment deleted successfully."},
+                response_only=True,
+            ),
+            404: OpenApiExample(
+                name="Assignment not found",
+                value={"message": "Teacher assignment not found."},
+                response_only=True,
+            ),
+            400: OpenApiExample(
+                name="Missing parameters",
+                value={"message": "Both class_id and teacher_id are required to delete an assignment."},
+                response_only=True,
+            ),
+        },
+    )
+    def delete(self, request, format=None):
+        class_id = request.query_params.get('class_id')
+        teacher_id = request.query_params.get('teacher_id')
+
+        if not class_id or not teacher_id:
+            return Response(
+                {"message": "Both class_id and teacher_id are required to delete an assignment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            assignment = TeachClass.objects.get(class_id=class_id, teacher_id=teacher_id)
+        except TeachClass.DoesNotExist:
+            return Response({"message": "Teacher assignment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        assignment.delete()
+        return Response({"message": "Teacher assignment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    
 
 class ClassLocationView(APIView):
     serializer_class = ClassLocationSerializer
@@ -254,6 +345,59 @@ class ClassLocationView(APIView):
         locations = ClassLocation.objects.filter(**filters)
         serializer = self.serializer_class(locations, many=True)
         return Response(serializer.data)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='class_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Class ID to delete location',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='lab_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Lab ID to delete location',
+                required=True,
+            ),
+        ],
+        responses={
+            204: OpenApiExample(
+                name="Location deleted",
+                value={"message": "Location deleted successfully."},
+                response_only=True,
+            ),
+            404: OpenApiExample(
+                name="Location not found",
+                value={"message": "Location not found."},
+                response_only=True,
+            ),
+            400: OpenApiExample(
+                name="Missing parameters",
+                value={"message": "Both class_id and lab_id are required to delete a location."},
+                response_only=True,
+            ),
+        },
+    )
+    def delete(self, request, format=None):
+        class_id = request.query_params.get('class_id')
+        lab_id = request.query_params.get('lab_id')
+
+        if not class_id or not lab_id:
+            return Response(
+                {"message": "Both class_id and lab_id are required to delete a location."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            location = ClassLocation.objects.get(class_id=class_id, lab_id=lab_id)
+        except ClassLocation.DoesNotExist:
+            return Response({"message": "Location not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        location.delete()
+        return Response({"message": "Location deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 class CommentToClassView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -313,3 +457,50 @@ class CommentToClassView(APIView):
         comments = ClassComment.objects.filter(**filters)
         serializer = serializer_class(comments, many=True)
         return Response(serializer.data)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='class_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Class ID to delete comment',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='sender_id',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Sender ID to delete comment',
+                required=True,
+            ),
+        ],
+        responses={
+            204: OpenApiExample(
+                name="Comment deleted",
+                value={"message": "Comment deleted successfully."},
+                response_only=True,
+            ),
+            404: OpenApiExample(
+                name="Comment not found",
+                value={"message": "Comment not found."},
+                response_only=True,
+            ),
+        },
+    )
+    def delete(self, request, format=None):
+        class_id = request.query_params.get('class_id')
+        sender_id = request.query_params.get('sender_id')
+        if not class_id or not sender_id:
+            return Response(
+                {"message": "Both class_id and sender_id are required to delete a comment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            comment = ClassComment.objects.get(class_id=class_id, sender_id=sender_id)
+        except ClassComment.DoesNotExist:
+            return Response({"message": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        comment.delete()
+        return Response({"message": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
