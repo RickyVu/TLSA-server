@@ -59,3 +59,6 @@ class TLSA_User(AbstractUser):
     class Meta:
         swappable = 'AUTH_USER_MODEL'
         db_table = 'tlsa_user'
+
+    def __str__(self):
+        return f"{self.real_name} ({self.user_id})"

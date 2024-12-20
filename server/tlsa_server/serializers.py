@@ -5,10 +5,9 @@ from django.contrib.auth.hashers import make_password
 class TLSAUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TLSA_User
-        fields = ['user_id', 'username', 'email', 'role', 'phone_number', 'profile_picture', 'real_name', 'department']
+        fields = ['user_id', 'email', 'role', 'phone_number', 'profile_picture', 'real_name', 'department']
     
 class UserRegistrationSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
     password = serializers.CharField(required=True, write_only=True)
     profile_picture = serializers.ImageField(required=False)
     real_name = serializers.CharField(required=False)
@@ -23,16 +22,16 @@ class UserRegistrationSerializer(serializers.Serializer):
         phone_number = validated_data.pop('phone_number', None)
         user_id = validated_data.pop('user_id')
 
-        user = TLSA_User.objects.create_user(user_id=user_id, **validated_data)
-
-        if profile_picture:
-            user.profile_picture = profile_picture
-        if real_name:
-            user.real_name = real_name
-        if department:
-            user.department = department
-        if phone_number:
-            user.phone_number = phone_number
+        user = TLSA_User.objects.create_user(
+            username=user_id,
+            user_id=user_id,
+            password=validated_data['password'],
+            real_name=real_name,
+            profile_picture=profile_picture,
+            phone_number=phone_number,
+            department=department,
+            role="student"  # Default role for new users
+        )
 
         user.save()
         return user
@@ -54,7 +53,7 @@ class UserInfoPatchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TLSA_User
-        fields = ['user_id', 'username', 'email', 'password', 'phone_number', 'profile_picture', 'real_name', 'department']
+        fields = ['user_id', 'email', 'password', 'phone_number', 'profile_picture', 'real_name', 'department']
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)

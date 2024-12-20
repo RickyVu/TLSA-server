@@ -13,17 +13,15 @@ class RegisterView(APIView):
     """Register a new user."""
     serializer_class = UserRegistrationSerializer
 
-
     @extend_schema(
         request={
             "multipart/form-data": {
                 "type": "object",
                 "properties": {
-                    "username": {"type": "string"},
-                    "password": {"type": "string"},
-                    "profile_picture": {"type": "string", "format": "binary"},
                     "real_name": {"type": "string"},
                     "user_id": {"type": "string"},
+                    "password": {"type": "string"},
+                    "profile_picture": {"type": "string", "format": "binary"},
                     "phone_number": {"type": "string"},
                     "department": {"type": "string"},
                 },
@@ -34,11 +32,10 @@ class RegisterView(APIView):
                 "Example Registration",
                 description="Example of a registration request.",
                 value={
-                    "username": "student",
+                    "real_name": "student",
+                    "user_id": "2021000000",
                     "password": "securepassword123",
                     "profile_picture": "file.png",
-                    "real_name": "student 1",
-                    "user_id": "2021000000",
                     "phone_number": "18000000000",
                     "department": "Computer Science",
                 },
@@ -48,22 +45,26 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            profile_picture = serializer.validated_data.get('profile_picture')
-            real_name = serializer.validated_data.get('real_name')
             user_id = serializer.validated_data['user_id']
+            password = serializer.validated_data['password']
+            real_name = serializer.validated_data.get('real_name')
+            profile_picture = serializer.validated_data.get('profile_picture')
+            phone_number = serializer.validated_data.get('phone_number')
             department = serializer.validated_data.get('department')
 
             User = get_user_model()
-            if User.objects.filter(username=username).exists():
-                return Response({"error": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
             if User.objects.filter(user_id=user_id).exists():
                 return Response({"error": "User ID already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-            user = User(username=username, profile_picture=profile_picture, real_name=real_name, user_id=user_id, department=department)
+            user = User(
+                real_name=real_name,
+                user_id=user_id,
+                profile_picture=profile_picture,
+                phone_number=phone_number,
+                department=department,
+                role="student"  # Default role for new users
+            )
             user.set_password(password)
-            user.role = "student"
             user.save()
 
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)

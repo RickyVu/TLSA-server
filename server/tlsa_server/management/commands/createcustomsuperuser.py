@@ -9,13 +9,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('user_id', type=str, help='The user_id for the superuser')
-        parser.add_argument('username', type=str, help='The username for the superuser')
         parser.add_argument('email', type=str, help='The email for the superuser')
         parser.add_argument('password', type=str, help='The password for the superuser')
 
     def handle(self, *args, **kwargs):
         user_id = kwargs['user_id']
-        username = kwargs['username']
+        username = kwargs['user_id']
         email = kwargs['email']
         password = kwargs['password']
 

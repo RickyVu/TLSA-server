@@ -217,7 +217,7 @@ class LabManagerView(APIView):
         if lab_id:
             filters["lab_id"] = lab_id
         if manager_name:
-            filters["manager__username__icontains"] = manager_name
+            filters["manager__real_name__icontains"] = manager_name
 
         managers = ManageLab.objects.filter(**filters)
         

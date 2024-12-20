@@ -11,7 +11,7 @@ class CustomUserAdmin(UserAdmin):
         self.list_display = ("user_id","role") + self.list_display
 
     fieldsets = (
-        (None, {'fields': ('username', 'password')}),
+        (None, {'fields': ('user_id', 'real_name', 'password')}),
         ('Personal info', {'fields': ('email', 'phone_number', 'role', 'profile_picture', 'department')}),
         #('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),

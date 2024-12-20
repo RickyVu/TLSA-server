@@ -26,7 +26,7 @@ class ManageLabSerializer(serializers.ModelSerializer):
     
 class ManagerDetailSerializer(serializers.ModelSerializer):
     manager_user_id = serializers.CharField(source='manager.user_id')
-    manager_name = serializers.CharField(source='manager.username')
+    manager_name = serializers.CharField(source='manager.real_name')
     manager_phone = serializers.CharField(source='manager.phone_number')
     manager_email = serializers.EmailField(source='manager.email')
     lab_id = serializers.IntegerField(source='lab.id')
