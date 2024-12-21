@@ -53,6 +53,7 @@ class TLSA_User(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.pk = self.user_id
+            self.username = self.user_id
         super().save(*args, **kwargs)
 
     # Override the default primary key behavior

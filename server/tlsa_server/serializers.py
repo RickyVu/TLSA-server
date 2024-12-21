@@ -35,6 +35,37 @@ class UserRegistrationSerializer(serializers.Serializer):
 
         user.save()
         return user
+    
+class StaffRegistrationSerializer(serializers.Serializer):
+    password = serializers.CharField(required=True, write_only=True)
+    profile_picture = serializers.ImageField(required=False)
+    real_name = serializers.CharField(required=False)
+    user_id = serializers.CharField(required=True, validators=[numeric_validator])
+    phone_number = serializers.CharField(required=False)
+    department = serializers.CharField(required=False, max_length=50)
+    role = serializers.CharField(required=True)
+
+    def create(self, validated_data):
+        profile_picture = validated_data.pop('profile_picture', None)
+        real_name = validated_data.pop('real_name', None)
+        department = validated_data.pop('department', None)
+        phone_number = validated_data.pop('phone_number', None)
+        user_id = validated_data.pop('user_id')
+        role = validated_data.pop('role')
+
+        user = TLSA_User.objects.create_user(
+            username=user_id,
+            user_id=user_id,
+            password=validated_data['password'],
+            real_name=real_name,
+            profile_picture=profile_picture,
+            phone_number=phone_number,
+            department=department,
+            role=role
+        )
+
+        user.save()
+        return user
 
 class UserLoginSerializer(serializers.Serializer):
     user_id = serializers.CharField(required=True)

@@ -18,7 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
-from .views import (RegisterView, 
+from .views import (RegisterView,
+                    RegisterStaffView,
                     LoginView, 
                     UserInfoView, 
                     ValidateTokenView, 
@@ -34,6 +35,7 @@ urlpatterns = [
     
     # Authentication
     path('api/v1/users/register/', RegisterView.as_view(), name='register'),
+    path('api/v1/users/register-staff', RegisterStaffView.as_view(), name='register-staff'),
     path('api/v1/users/login/', LoginView.as_view(), name='login'),
     path('api/v1/users/user-info', UserInfoView.as_view(), name='user-info'),
     path('api/v1/token/validate/', ValidateTokenView.as_view(), name='validate-token'),

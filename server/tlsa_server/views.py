@@ -7,7 +7,12 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.views import APIView
-from .serializers import TLSAUserSerializer, UserRegistrationSerializer, UserLoginSerializer, RefreshTokenSerializer, UserInfoPatchSerializer
+from .serializers import (TLSAUserSerializer, 
+                          UserRegistrationSerializer, 
+                          StaffRegistrationSerializer, 
+                          UserLoginSerializer, 
+                          RefreshTokenSerializer, 
+                          UserInfoPatchSerializer)
 
 class RegisterView(APIView):
     """Register a new user."""
@@ -70,7 +75,74 @@ class RegisterView(APIView):
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class RegisterStaffView(APIView):
+    """Register a new staff user (teacher or manager)."""
+    serializer_class = StaffRegistrationSerializer
 
+    @extend_schema(
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "real_name": {"type": "string"},
+                    "user_id": {"type": "string"},
+                    "password": {"type": "string"},
+                    "profile_picture": {"type": "string", "format": "binary"},
+                    "phone_number": {"type": "string"},
+                    "department": {"type": "string"},
+                    "role": {"type": "string", "enum": ["teacher", "manager"]},  # Role parameter
+                },
+            }
+        },
+        examples=[
+            OpenApiExample(
+                "Example Staff Registration",
+                description="Example of a staff registration request.",
+                value={
+                    "real_name": "teacher",
+                    "user_id": "2021000001",
+                    "password": "securepassword123",
+                    "profile_picture": "file.png",
+                    "phone_number": "18000000000",
+                    "department": "Computer Science",
+                    "role": "teacher",  # Role parameter
+                },
+            )
+        ],
+    )
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            user_id = serializer.validated_data['user_id']
+            password = serializer.validated_data['password']
+            real_name = serializer.validated_data.get('real_name')
+            profile_picture = serializer.validated_data.get('profile_picture')
+            phone_number = serializer.validated_data.get('phone_number')
+            department = serializer.validated_data.get('department')
+            role = serializer.validated_data.get('role')
+
+            if role not in ["teacher", "manager"]:
+                return Response({"error": "Invalid role. Role must be either 'teacher' or 'manager'."}, status=status.HTTP_400_BAD_REQUEST)
+
+            User = get_user_model()
+            if User.objects.filter(user_id=user_id).exists():
+                return Response({"error": "User ID already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = User(
+                real_name=real_name,
+                user_id=user_id,
+                profile_picture=profile_picture,
+                phone_number=phone_number,
+                department=department,
+                role=role  # Set the role based on the request
+            )
+            user.set_password(password)
+            user.save()
+
+            return Response({"message": "Staff user registered successfully."}, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
     """Login user and return JWT tokens."""

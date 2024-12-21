@@ -8,7 +8,7 @@ class CustomUserAdmin(UserAdmin):
 
     def __init__(self, model, admin_site):
         super().__init__(model, admin_site)
-        self.list_display = ("user_id","role") + self.list_display
+        self.list_display = ("user_id", "real_name", "department", "role", "email", "phone_number")
 
     fieldsets = (
         (None, {'fields': ('user_id', 'real_name', 'password')}),
