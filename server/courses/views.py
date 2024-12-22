@@ -5,7 +5,12 @@ from rest_framework.decorators import permission_classes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, CourseEnrollment
-from .serializers import CourseSerializer, CourseEnrollmentSerializer, CourseClassSerializer, CoursePatchSerializer, CourseEnrollmentGetSerializer
+from .serializers import (CourseSerializer, 
+                          CourseEnrollmentSerializer, 
+                          CourseClassSerializer, 
+                          CourseClassGetSerializer, 
+                          CoursePatchSerializer, 
+                          CourseEnrollmentGetSerializer)
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
 from classes.models import (TeachClass, ClassLocation)
 from labs.models import (ManageLab)
@@ -349,6 +354,60 @@ class CourseClassView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='course_code',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter by course code',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='course_sequence',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter by course_sequence',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='class_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Filter by class ID',
+                required=False,
+            ),
+        ],
+        responses={
+            200: CourseClassSerializer(many=True),
+            404: OpenApiExample(
+                name="Not found",
+                value={"message": "No matching records found."},
+                response_only=True,
+            ),
+        },
+    )
+    def get(self, request, format=None):
+        course_code = request.query_params.get('course_code')
+        course_sequence = request.query_params.get('course_sequence')
+        class_id = request.query_params.get('class_id')
+
+        course_classes = CourseClass.objects.all()
+
+        if course_code:
+            course_classes = course_classes.filter(course__course_code=course_code)
+        if course_sequence:
+            course_classes = course_classes.filter(course__course_sequence=course_sequence)
+        if class_id:
+            course_classes = course_classes.filter(class_instance__id=class_id)
+
+        #if not course_classes.exists():
+        #    return Response({"message": "No matching records found."}, status=status.HTTP_404_NOT_FOUND)
+
+        print(course_classes)
+        serializer = CourseClassGetSerializer(course_classes, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @extend_schema(
         parameters=[

@@ -110,3 +110,12 @@ class CourseClassSerializer(serializers.ModelSerializer):
             class_instance=class_instance,
             course=course,
         )
+    
+class CourseClassGetSerializer(serializers.ModelSerializer):
+    class_id = serializers.IntegerField(source='class_instance.id')
+    course_code = serializers.CharField(source='course.course_code')
+    course_sequence = serializers.CharField(source='course.course_sequence')
+
+    class Meta:
+        model = CourseClass
+        fields = ['class_id', 'course_code', 'course_sequence']
