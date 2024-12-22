@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from tlsa_server.permissions import IsAuthenticated, IsTeacher
+from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs, IsManager
 from .models import (Class, 
                      TeachClass, 
                      ClassLocation, 
@@ -33,11 +33,11 @@ class ClassView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher()]
+            return [IsTeacher() or IsTeachingAffairs()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher()]
+            return [IsTeacher() or IsTeachingAffairs()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher()]
+            return [IsTeacher() or IsTeachingAffairs()]
         return []
 
     @extend_schema(
@@ -193,6 +193,15 @@ class ClassView(APIView):
 class TeacherClassView(APIView):
     serializer_class = TeachClassSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
+        return []
+
     @extend_schema(
         request=TeachClassSerializer,
     )
@@ -302,6 +311,15 @@ class TeacherClassView(APIView):
 class ClassLocationView(APIView):
     serializer_class = ClassLocationSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
+        return []
+
     @extend_schema(
         request=ClassLocationSerializer,
     )
@@ -409,7 +427,15 @@ class ClassLocationView(APIView):
 
 class CommentToClassView(APIView):
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsAuthenticated()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
+        return []
     
     @extend_schema(
         request=ClassCommentWithoutSenderSerializer,
@@ -523,8 +549,12 @@ class ExperimentView(APIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
-        elif self.request.method in ['POST', 'PATCH', 'DELETE']:
-            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
         return []
 
     @extend_schema(
@@ -743,108 +773,3 @@ class ExperimentView(APIView):
 
         experiment.delete()
         return Response({"message": "Experiment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-    
-
-# class ClassExperimentView(APIView):
-#     serializer_class = ClassExperimentSerializer
-#     authentication_classes = [JWTAuthentication]
-
-#     def get_permissions(self):
-#         if self.request.method == 'GET':
-#             return [IsAuthenticated()]
-#         elif self.request.method in ['POST', 'PATCH', 'DELETE']:
-#             return [IsAuthenticated()]
-#         return []
-
-#     def post(self, request, format=None):
-#         serializer = self.serializer_class(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(
-#                 {
-#                     "message": "ClassExperiment created successfully.",
-#                     "class_experiment": serializer.data
-#                 },
-#                 status=status.HTTP_201_CREATED
-#             )
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#     @extend_schema(
-#         parameters=[
-#             OpenApiParameter(
-#                 name='class_experiment_id',
-#                 type=int,
-#                 location=OpenApiParameter.QUERY,
-#                 description='Query by class_experiment_id',
-#                 required=False,
-#             ),
-#             OpenApiParameter(
-#                 name='class_id',
-#                 type=int,
-#                 location=OpenApiParameter.QUERY,
-#                 description='Filter by class_id',
-#                 required=False,
-#             ),
-#             OpenApiParameter(
-#                 name='experiment_id',
-#                 type=int,
-#                 location=OpenApiParameter.QUERY,
-#                 description='Filter by experiment_id',
-#                 required=False,
-#             ),
-#         ],
-#         responses={
-#             200: ClassExperimentGetSerializer(many=True),
-#         },
-#     )
-#     def get(self, request, format=None):
-#         serializer_class = ClassExperimentGetSerializer
-#         class_experiment_id = request.query_params.get('class_experiment_id')
-#         class_id = request.query_params.get('class_id')
-#         experiment_id = request.query_params.get('experiment_id')
-
-#         filters = {}
-#         if class_experiment_id:
-#             filters["id"] = class_experiment_id
-#         if class_id:
-#             filters["class_id"] = class_id
-#         if experiment_id:
-#             filters["experiment_id"] = experiment_id
-
-#         class_experiments = ClassExperiment.objects.filter(**filters)
-
-#         serializer = serializer_class(class_experiments, many=True)
-#         return Response(serializer.data)
-
-#     @extend_schema(
-#         parameters=[
-#             OpenApiParameter(
-#                 name='class_experiment_id',
-#                 type=int,
-#                 location=OpenApiParameter.QUERY,
-#                 description='ClassExperiment ID to delete',
-#                 required=True,
-#             ),
-#         ],
-#         responses={
-#             204: OpenApiExample(
-#                 name="ClassExperiment deleted",
-#                 value={"message": "ClassExperiment deleted successfully."},
-#                 response_only=True,
-#             ),
-#             404: OpenApiExample(
-#                 name="ClassExperiment not found",
-#                 value={"message": "ClassExperiment not found."},
-#                 response_only=True,
-#             ),
-#         },
-#     )
-#     def delete(self, request, format=None):
-#         class_experiment_id = request.query_params.get('class_experiment_id')
-#         try:
-#             class_experiment = ClassExperiment.objects.get(id=class_experiment_id)
-#         except ClassExperiment.DoesNotExist:
-#             return Response({"message": "ClassExperiment not found."}, status=status.HTTP_404_NOT_FOUND)
-
-#         class_experiment.delete()
-#         return Response({"message": "ClassExperiment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)

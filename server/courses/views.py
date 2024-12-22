@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import permission_classes
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, CourseEnrollment
@@ -11,7 +10,7 @@ from .serializers import (CourseSerializer,
                           CourseClassGetSerializer, 
                           CoursePatchSerializer, 
                           CourseEnrollmentGetSerializer)
-from tlsa_server.permissions import IsAuthenticated, IsTeacher
+from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs
 from classes.models import (TeachClass, ClassLocation)
 from labs.models import (ManageLab)
 from courses.models import (CourseClass)
@@ -20,7 +19,20 @@ class CourseView(APIView):
     serializer_class = CourseSerializer
     authentication_classes = [JWTAuthentication]
 
-    @permission_classes([IsAuthenticated])
+    def get_permissions(self):
+        print(self.request.method)
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            print("HERE")
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
+        print("!!!")
+        return []
+
     @extend_schema(
         description="Retrieve courses based on query parameters. Supports filtering by course code, course sequence, course name, and personal courses.",
         parameters=[
@@ -101,9 +113,9 @@ class CourseView(APIView):
             filters["course_code__in"], filters["course_sequence__in"] = "-1", "-1"
         return filters
 
-    @permission_classes([IsTeacher])
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
+        print(request.user.role)
         if serializer.is_valid():
             course = serializer.save()
             return Response(
@@ -115,7 +127,6 @@ class CourseView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsTeacher])
     @extend_schema(
         request=CoursePatchSerializer,
     )
@@ -141,7 +152,6 @@ class CourseView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @permission_classes([IsTeacher])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -199,8 +209,12 @@ class CourseEnrollmentView(APIView):
     serializer_class = CourseEnrollmentSerializer
 
     def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsTeacher()]
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
         return []
     
 
@@ -265,7 +279,6 @@ class CourseEnrollmentView(APIView):
             filters["course_id"] = course_id
 
         enrollments = CourseEnrollment.objects.filter(**filters)
-        print(enrollments)
 
         serializer = CourseEnrollmentGetSerializer(enrollments, many=True)
         return Response(serializer.data)
@@ -339,8 +352,14 @@ class CourseClassView(APIView):
     serializer_class = CourseClassSerializer
 
     def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsTeacher()]
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
         return []
 
     def post(self, request, format=None):

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -13,10 +13,16 @@ from .serializers import (TLSAUserSerializer,
                           UserLoginSerializer, 
                           RefreshTokenSerializer, 
                           UserInfoPatchSerializer)
+from .permissions import IsTeachingAffairs
 
 class RegisterView(APIView):
     """Register a new user."""
     serializer_class = UserRegistrationSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsTeachingAffairs()]
+        return []
 
     @extend_schema(
         request={
@@ -79,6 +85,11 @@ class RegisterView(APIView):
 class RegisterStaffView(APIView):
     """Register a new staff user (teacher or manager)."""
     serializer_class = StaffRegistrationSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsTeachingAffairs()]
+        return []
 
     @extend_schema(
         request={
@@ -177,8 +188,14 @@ class LoginView(APIView):
 class UserInfoView(APIView):
     """Retrieve user information based on user_id."""
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
     serializer_class = TLSAUserSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'PATCH':
+            return [IsTeachingAffairs()]
+        return []
 
     @extend_schema(
         parameters=[
@@ -259,8 +276,14 @@ class UserInfoView(APIView):
 class ChangeUserRoleView(APIView):
     """Change user role."""
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
     serializer_class = TLSAUserSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'PATCH':
+            return [IsTeachingAffairs()]
+        return []
 
     @extend_schema(
         parameters=[
