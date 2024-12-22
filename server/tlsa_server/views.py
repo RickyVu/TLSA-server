@@ -256,6 +256,88 @@ class UserInfoView(APIView):
         else:
             return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
         
+class ChangeUserRoleView(APIView):
+    """Change user role."""
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = TLSAUserSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='user_id',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='User ID to retrieve information for',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='role',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter users by role (student/teacher/manager)',
+                required=False,
+            ),
+        ],
+        responses={
+            200: TLSAUserSerializer(many=True),
+            404: None,
+            403: None,
+        },
+    )
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+        role = request.query_params.get('role')
+
+        filters = {}
+        if user_id:
+            filters["user_id"] = user_id
+        if role:
+            filters["role"] = role
+
+        User = get_user_model()
+        users = User.objects.filter(**filters)
+
+        # Check if the requesting user is allowed to view the information
+        if request.user.role in ['teacher', 'manager', 'student']:
+            serializer = self.serializer_class(users, many=True)
+            return Response(serializer.data)
+        elif request.user.role == 'student':
+            if user_id and request.user.user_id == user_id:
+                serializer = self.serializer_class(users, many=True)
+                return Response(serializer.data)
+            else:
+                return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        request=UserInfoPatchSerializer,
+    )
+    def patch(self, request, format=None):
+        user_id = request.data.get('user_id')
+        User = get_user_model()
+        try:
+            user_instance = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if the requesting user is allowed to update the user information
+        if request.user.role in ['teacher', 'manager'] or request.user.user_id == user_id:
+            serializer = UserInfoPatchSerializer(user_instance, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                        "message": "User information updated successfully.",
+                        "user": serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
+
 class ValidateTokenView(APIView):
     """Validate a JWT token."""
 

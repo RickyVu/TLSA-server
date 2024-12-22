@@ -16,6 +16,47 @@ class CourseView(APIView):
     authentication_classes = [JWTAuthentication]
 
     @permission_classes([IsAuthenticated])
+    @extend_schema(
+        description="Retrieve courses based on query parameters. Supports filtering by course code, course sequence, course name, and personal courses.",
+        parameters=[
+            OpenApiParameter(
+                name='course_code',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter courses by course code.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='course_sequence',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter courses by course sequence.',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='course_name',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter courses by course name (case-insensitive).',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='personal',
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                description='Filter courses based on personal enrollment or teaching. Set to `true` to enable.',
+                required=False,
+            ),
+        ],
+        responses={
+            200: CourseSerializer(many=True),
+            401: OpenApiExample(
+                name="Unauthorized",
+                value={"detail": "Authentication credentials were not provided."},
+                response_only=True,
+            ),
+        }
+    )
     def get(self, request, format=None):
         course_code = request.query_params.get('course_code')
         course_sequence = request.query_params.get('course_sequence')
@@ -41,17 +82,18 @@ class CourseView(APIView):
     def _get_personal_courses_filters(self, user):
         filters = {}
         if user.role == "student":
-            enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course__course_code', 'course__course_sequence')
-            filters["course_code__in"], filters["course_sequence__in"] = zip(*enrolled_courses)
+            result_courses = CourseEnrollment.objects.filter(student=user).values_list('course__course_code', 'course__course_sequence')
         elif user.role == "teacher":
             taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
-            taught_courses = CourseClass.objects.filter(class_instance_id__in=taught_classes).values_list('course__course_code', 'course__course_sequence')
-            filters["course_code__in"], filters["course_sequence__in"] = zip(*taught_courses)
+            result_courses = CourseClass.objects.filter(class_instance_id__in=taught_classes).values_list('course__course_code', 'course__course_sequence')
         elif user.role == "manager":
             managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
             managed_classes = ClassLocation.objects.filter(lab_id__in=managed_labs).values_list('class_id', flat=True)
-            managed_courses = CourseClass.objects.filter(class_instance_id__in=managed_classes).values_list('course__course_code', 'course__course_sequence')
-            filters["course_code__in"], filters["course_sequence__in"] = zip(*managed_courses)
+            result_courses = CourseClass.objects.filter(class_instance_id__in=managed_classes).values_list('course__course_code', 'course__course_sequence')
+        if result_courses:
+            filters["course_code__in"], filters["course_sequence__in"] = zip(*result_courses)
+        else:
+            filters["course_code__in"], filters["course_sequence__in"] = "-1", "-1"
         return filters
 
     @permission_classes([IsTeacher])
