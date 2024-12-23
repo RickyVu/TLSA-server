@@ -194,8 +194,6 @@ class UserInfoView(APIView):
         # IMPORTANT: GET method may have additional user role behaviours defined
         if self.request.method == 'GET':
             return [IsAuthenticated()]
-        elif self.request.method == 'PATCH':
-            return [IsTeachingAffairs()]
         return []
 
     @extend_schema(

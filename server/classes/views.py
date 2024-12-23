@@ -33,11 +33,11 @@ class ClassView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         return []
 
     @extend_schema(
@@ -197,9 +197,9 @@ class TeacherClassView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         return []
 
     @extend_schema(
@@ -315,9 +315,9 @@ class ClassLocationView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         return []
 
     @extend_schema(
@@ -434,7 +434,7 @@ class CommentToClassView(APIView):
         elif self.request.method == 'POST':
             return [IsAuthenticated()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         return []
     
     @extend_schema(
@@ -550,11 +550,11 @@ class ExperimentView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+            return [(IsTeacher|IsManager|IsTeachingAffairs)()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+            return [(IsTeacher|IsManager|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+            return [(IsTeacher|IsManager|IsTeachingAffairs)()]
         return []
 
     @extend_schema(

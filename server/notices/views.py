@@ -14,11 +14,11 @@ class NoticeView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         return []
 
     def post(self, request, format=None):
@@ -156,11 +156,11 @@ class NoticeCompletionView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         return []
 
     def post(self, request, format=None):
@@ -242,11 +242,11 @@ class NoticeContentView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         return []
 
     def post(self, request, format=None):
@@ -384,9 +384,9 @@ class NoticeTagView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+            return [(IsTeacher|IsManager|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+            return [(IsTeacher|IsManager|IsTeachingAffairs)()]
         return []
 
     def post(self, request, format=None):
@@ -468,9 +468,9 @@ class NoticeContentTagView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsManager() or IsTeachingAffairs]
+            return [(IsTeacher|IsManager|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsManager() or IsTeachingAffairs]
+            return [(IsTeacher|IsManager|IsTeachingAffairs)()]
         return []
 
     def post(self, request, format=None):
@@ -552,9 +552,9 @@ class NoticeRowView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsManager()]
+            return [(IsTeacher|IsManager)()]
         return []
 
     def post(self, request, format=None):
