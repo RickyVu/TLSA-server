@@ -11,6 +11,7 @@ from classes.models import (TeachClass, ClassLocation)
 from labs.models import (ManageLab)
 from courses.models import (CourseClass)
 
+
 class CourseView(APIView):
     serializer_class = CourseSerializer
     authentication_classes = [JWTAuthentication]
@@ -93,7 +94,7 @@ class CourseView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @permission_classes([IsTeacher])
     @extend_schema(
         parameters=[
@@ -148,6 +149,7 @@ class CourseView(APIView):
         course.delete()
         return Response({"message": "Course deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class CourseEnrollmentView(APIView):
     serializer_class = CourseEnrollmentSerializer
 
@@ -155,7 +157,6 @@ class CourseEnrollmentView(APIView):
         if self.request.method == 'POST':
             return [IsTeacher()]
         return []
-    
 
     @extend_schema(
         request=CourseEnrollmentSerializer,
@@ -195,7 +196,7 @@ class CourseEnrollmentView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -222,7 +223,7 @@ class CourseEnrollmentView(APIView):
 
         serializer = CourseEnrollmentGetSerializer(enrollments, many=True)
         return Response(serializer.data)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -288,6 +289,7 @@ class CourseEnrollmentView(APIView):
         enrollment.delete()
         return Response({"message": "Course enrollment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class CourseClassView(APIView):
     serializer_class = CourseClassSerializer
 
@@ -307,7 +309,7 @@ class CourseClassView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(

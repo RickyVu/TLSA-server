@@ -4,18 +4,19 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
-from .models import (Class, 
-                     TeachClass, 
-                     ClassLocation, 
+from .models import (Class,
+                     TeachClass,
+                     ClassLocation,
                      ClassComment)
-from .serializers import (ClassSerializer, 
-                          TeachClassSerializer, 
+from .serializers import (ClassSerializer,
+                          TeachClassSerializer,
                           ClassLocationSerializer,
                           ClassOutputSerializer,
                           ClassPatchSerializer,
                           ClassCommentSerializer, ClassCommentWithoutSenderSerializer)
 from courses.models import (CourseClass, CourseEnrollment)
 from labs.models import (ManageLab)
+
 
 class ClassView(APIView):
     authentication_classes = [JWTAuthentication]
@@ -122,7 +123,7 @@ class ClassView(APIView):
         classes = Class.objects.filter(**filters)
         serializer = self.serializer_class(classes, many=True)
         return Response(serializer.data)
-    
+
     @extend_schema(
         request=ClassPatchSerializer,
     )
@@ -144,7 +145,7 @@ class ClassView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -200,7 +201,7 @@ class TeacherClassView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -236,7 +237,7 @@ class TeacherClassView(APIView):
         teachers = TeachClass.objects.filter(**filters)
         serializer = self.serializer_class(teachers, many=True)
         return Response(serializer.data)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -289,7 +290,7 @@ class TeacherClassView(APIView):
 
         assignment.delete()
         return Response({"message": "Teacher assignment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-    
+
 
 class ClassLocationView(APIView):
     serializer_class = ClassLocationSerializer
@@ -309,7 +310,7 @@ class ClassLocationView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -345,7 +346,7 @@ class ClassLocationView(APIView):
         locations = ClassLocation.objects.filter(**filters)
         serializer = self.serializer_class(locations, many=True)
         return Response(serializer.data)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -399,10 +400,11 @@ class ClassLocationView(APIView):
         location.delete()
         return Response({"message": "Location deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class CommentToClassView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    
+
     @extend_schema(
         request=ClassCommentWithoutSenderSerializer,
     )
@@ -421,7 +423,7 @@ class CommentToClassView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -457,7 +459,7 @@ class CommentToClassView(APIView):
         comments = ClassComment.objects.filter(**filters)
         serializer = serializer_class(comments, many=True)
         return Response(serializer.data)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(

@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models import (Notice, 
-                     NoticeCompletion, 
-                     NoticeContent, 
-                     NoticeContentTag, 
-                     NoticeRow, 
+from .models import (Notice,
+                     NoticeCompletion,
+                     NoticeContent,
+                     NoticeContentTag,
+                     NoticeRow,
                      NoticeTag)
 
 # Register your models here.

@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator, MinLengthValidator, MaxLength
 
 from django.db import models
 
+
 class Course(models.Model):
     course_code = models.CharField(max_length=8, verbose_name="Course Code")  # 课程号 (8 characters)
     course_sequence = models.CharField(max_length=5, verbose_name="Course Sequence")  # 课序号 (1-5 characters)
@@ -18,17 +19,18 @@ class Course(models.Model):
     def __str__(self):
         return f"{self.course_code}-{self.course_sequence} ({self.name})"
 
+
 class CourseEnrollment(models.Model):
     student = models.ForeignKey(
-        TLSA_User, 
-        on_delete=models.CASCADE, 
-        to_field='user_id', 
+        TLSA_User,
+        on_delete=models.CASCADE,
+        to_field='user_id',
         db_column='student_user_id',
         verbose_name="Student"
     )
     course = models.ForeignKey(
-        Course, 
-        on_delete=models.CASCADE, 
+        Course,
+        on_delete=models.CASCADE,
         related_name='enrollments'
     )
 
@@ -38,6 +40,7 @@ class CourseEnrollment(models.Model):
 
     def __str__(self):
         return f"Student {self.student.user_id} enrolled in Course {self.course.course_code}-{self.course.course_sequence}"
+
 
 class CourseClass(models.Model):
     course = models.ForeignKey(

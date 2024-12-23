@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import (NoticeView, 
-                    NoticeCompletionView, 
-                    NoticeContentView, 
-                    NoticeTagView, 
-                    NoticeContentTagView, 
+from .views import (NoticeView,
+                    NoticeCompletionView,
+                    NoticeContentView,
+                    NoticeTagView,
+                    NoticeContentTagView,
                     NoticeRowView)
 
 urlpatterns = [

@@ -2,11 +2,13 @@ from rest_framework import serializers
 from .models import TLSA_User, numeric_validator
 from django.contrib.auth.hashers import make_password
 
+
 class TLSAUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TLSA_User
         fields = ['user_id', 'email', 'role', 'phone_number', 'profile_picture', 'real_name', 'department']
-    
+
+
 class UserRegistrationSerializer(serializers.Serializer):
     password = serializers.CharField(required=True, write_only=True)
     profile_picture = serializers.ImageField(required=False)
@@ -35,7 +37,8 @@ class UserRegistrationSerializer(serializers.Serializer):
 
         user.save()
         return user
-    
+
+
 class StaffRegistrationSerializer(serializers.Serializer):
     password = serializers.CharField(required=True, write_only=True)
     profile_picture = serializers.ImageField(required=False)
@@ -67,13 +70,16 @@ class StaffRegistrationSerializer(serializers.Serializer):
         user.save()
         return user
 
+
 class UserLoginSerializer(serializers.Serializer):
     user_id = serializers.CharField(required=True)
     password = serializers.CharField(required=True, write_only=True)
 
+
 class RefreshTokenSerializer(serializers.Serializer):
     refresh = serializers.CharField(required=True)
-    
+
+
 class UserInfoPatchSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(required=True)
     password = serializers.CharField(write_only=True, required=False)

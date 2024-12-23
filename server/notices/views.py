@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from rest_framework.decorators import permission_classes
 from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager
 
+
 class NoticeView(APIView):
     serializer_class = NoticeSerializer
 
@@ -142,6 +143,7 @@ class NoticeView(APIView):
         notice.delete()
         return Response({"message": "Notice deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class NoticeCompletionView(APIView):
     serializer_class = NoticeCompletionSerializer
 
@@ -219,6 +221,7 @@ class NoticeCompletionView(APIView):
 
         completion.delete()
         return Response({"message": "Notice completion deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
 
 class NoticeContentView(APIView):
     serializer_class = NoticeContentSerializer
@@ -355,6 +358,7 @@ class NoticeContentView(APIView):
         content.delete()
         return Response({"message": "Notice content deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class NoticeTagView(APIView):
     serializer_class = NoticeTagSerializer
 
@@ -433,6 +437,7 @@ class NoticeTagView(APIView):
         tag.delete()
         return Response({"message": "Notice tag deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class NoticeContentTagView(APIView):
     serializer_class = NoticeContentTagSerializer
 
@@ -510,6 +515,7 @@ class NoticeContentTagView(APIView):
 
         content_tag.delete()
         return Response({"message": "Notice content tag deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
 
 class NoticeRowView(APIView):
     serializer_class = NoticeRowSerializer

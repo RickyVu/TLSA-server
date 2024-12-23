@@ -5,6 +5,8 @@ import uuid
 from django.utils.deconstruct import deconstructible
 
 # Random filename generator
+
+
 @deconstructible
 class RandomFileName(object):
     def __init__(self, path):
@@ -25,8 +27,10 @@ class Lab(models.Model):
     safety_equipments = models.JSONField(default=list, blank=True, null=True)
     safety_notes = models.TextField(blank=True, null=True)
     lab_image = models.ImageField(upload_to=RandomFileName('lab_images/'), blank=True, null=True)
+
     def __str__(self):
         return self.name
+
 
 class ManageLab(models.Model):
     manager = models.ForeignKey(TLSA_User, on_delete=models.CASCADE, to_field='user_id', db_column='manager_user_id')

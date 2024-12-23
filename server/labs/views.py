@@ -9,6 +9,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+
 class LabView(APIView):
     serializer_class = LabSerializer
     authentication_classes = [JWTAuthentication]
@@ -19,7 +20,7 @@ class LabView(APIView):
         elif self.request.method in ['POST', 'PATCH', 'DELETE']:
             return [IsManager()]
         return []
-    
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -86,14 +87,14 @@ class LabView(APIView):
                 lab_locations = ClassLocation.objects.filter(class_id__in=taught_classes).values_list('lab_id', flat=True)
 
                 labs = labs.filter(id__in=lab_locations)
-                
+
             elif user.role == "manager":
                 managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
                 labs = labs.filter(id__in=managed_labs)
 
         serializer = serializer_class(labs, many=True)
         return Response(serializer.data)
-    
+
     @extend_schema(
         request=LabPatchSerializer,
         responses={
@@ -161,7 +162,8 @@ class LabView(APIView):
 
         lab.delete()
         return Response({"message": "Lab deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-    
+
+
 class LabManagerView(APIView):
     serializer_class = ManageLabSerializer
 
@@ -220,10 +222,10 @@ class LabManagerView(APIView):
             filters["manager__real_name__icontains"] = manager_name
 
         managers = ManageLab.objects.filter(**filters)
-        
+
         serializer = ManagerDetailSerializer(managers, many=True)
         return Response(serializer.data)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(

@@ -11,6 +11,7 @@ numeric_validator = RegexValidator(
     message="user_id must be exactly 10 digits and contain only numbers."
 )
 
+
 @deconstructible
 class RandomFileName(object):
     def __init__(self, path):
@@ -24,6 +25,7 @@ class RandomFileName(object):
         # Return the full path
         return os.path.join(self.path, filename)
 
+
 class TLSA_User(AbstractUser):
     ROLE_CHOICES = (
         ('student', 'Student'),
@@ -31,7 +33,7 @@ class TLSA_User(AbstractUser):
         ('manager', 'Manager'),
         ('teachingAffairs', 'TeachingAffairs')
     )
-    
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=RandomFileName('profile_pics/'), blank=True, null=True)

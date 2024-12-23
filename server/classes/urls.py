@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import (ClassView, 
-                    TeacherClassView, 
-                    ClassLocationView, 
+from .views import (ClassView,
+                    TeacherClassView,
+                    ClassLocationView,
                     CommentToClassView)
 
 urlpatterns = [

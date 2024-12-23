@@ -2,10 +2,11 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from .models import Notice,NoticeCompletion,NoticeContent,NoticeTag,NoticeContentTag,NoticeRow
+from .models import Notice, NoticeCompletion, NoticeContent, NoticeTag, NoticeContentTag, NoticeRow
 from classes.models import Class
 from tlsa_server.models import TLSA_User
 import time
+
 
 class NoticeViewTests(APITestCase):
     def setUp(self):
@@ -32,25 +33,24 @@ class NoticeViewTests(APITestCase):
 
         # 创建测试数据
         self.user = self.manager
-        
+
         self.data = {
             'class_or_lab_id': 1,
             'sender': self.user.user_id,
             'notice_type': 'class',
-            'post_time':'2024-11-27 11:40:58.801197+00',
-            'end_time':'2024-11-27 11:40:58.801197+00',
+            'post_time': '2024-11-27 11:40:58.801197+00',
+            'end_time': '2024-11-27 11:40:58.801197+00',
         }
         self.data2 = {
             'class_or_lab_id': 2,
             'sender': self.user.user_id,
             'notice_type': 'lab',
-            'post_time':'2024-11-27 11:40:58.801197+00',
-            'end_time':'2024-11-27 11:40:58.801197+00',
+            'post_time': '2024-11-27 11:40:58.801197+00',
+            'end_time': '2024-11-27 11:40:58.801197+00',
         }
         self.url = reverse('notice-list')
         self.notice1 = self.client.post(self.url, self.data)
         self.notice2 = self.client.post(self.url, self.data2)
-        
 
     def test_notice_creation(self):
         # 测试通知是否创建成功
@@ -90,41 +90,47 @@ class NoticeViewTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['notice_type'], 'class')
         self.assertEqual(response.data[0]['class_or_lab_id'], 1)
-    
+
     def test_patch_notice(self):
+        data0 = {
+            'class_or_lab_id': 1,
+            'sender': self.user.user_id,
+            'notice_type': 'class',
+            'post_time': '2024-11-27 11:40:58.801197+00',
+            'end_time': '2024-11-27 11:40:58.801197+00',
+        }
+        url = reverse('notice-list')
+        notice1 = self.client.post(url, data0)
         data = {
-            'id':1,
+            'id': 1,
             'class_or_lab_id': 2,
             'sender': self.user.user_id,
             'notice_type': 'lab',
-            'post_time':'2024-11-27 11:40:58.801197+00',
-            'end_time':'2024-11-27 11:40:58.801197+00',
+            'post_time': '2024-11-27 11:40:58.801197+00',
+            'end_time': '2024-11-27 11:40:58.801197+00',
         }
         invalid_data = {
-            'id':4,
+            'id': 4,
             'class_or_lab_id': 2,
             'sender': self.user.user_id,
             'notice_type': 'lab',
-            'post_time':'2024-11-27 11:40:58.801197+00',
-            'end_time':'2024-11-27 11:40:58.801197+00',
+            'post_time': '2024-11-27 11:40:58.801197+00',
+            'end_time': '2024-11-27 11:40:58.801197+00',
         }
         response = self.client.patch(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response1 = self.client.patch(self.url, invalid_data)
         self.assertEqual(response1.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_delete_notice(self):
         self.data3 = {
             'class_or_lab_id': 2,
             'sender': self.user.user_id,
             'notice_type': 'lab',
-            'post_time':'2024-11-27 11:40:58.801197+00',
-            'end_time':'2024-11-27 11:40:58.801197+00',
+            'post_time': '2024-11-27 11:40:58.801197+00',
+            'end_time': '2024-11-27 11:40:58.801197+00',
         }
         self.notice3 = self.client.post(self.url, self.data3)
         url = f'{reverse("notice-list")}?notice_id=3'
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-        
-

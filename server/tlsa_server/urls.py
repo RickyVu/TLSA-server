@@ -20,10 +20,10 @@ from django.conf import settings
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from .views import (RegisterView,
                     RegisterStaffView,
-                    LoginView, 
-                    UserInfoView, 
-                    ValidateTokenView, 
-                    RefreshTokenView, 
+                    LoginView,
+                    UserInfoView,
+                    ValidateTokenView,
+                    RefreshTokenView,
                     VerifyView)
 
 urlpatterns = [
@@ -32,7 +32,7 @@ urlpatterns = [
     path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/v1/docs/swagger/', SpectacularSwaggerView.as_view(), name='swagger-ui'),
     path('api/v1/docs/redoc/', SpectacularRedocView.as_view(), name='redoc-ui'),
-    
+
     # Authentication
     path('api/v1/users/register/', RegisterView.as_view(), name='register'),
     path('api/v1/users/register-staff', RegisterStaffView.as_view(), name='register-staff'),
@@ -51,4 +51,4 @@ urlpatterns = [
 
 # if settings.DEBUG:
 #     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-##swagger:   http://127.0.0.1:8000/api/v1/docs/swagger/
+# swagger:   http://127.0.0.1:8000/api/v1/docs/swagger/

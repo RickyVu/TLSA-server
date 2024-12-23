@@ -3,10 +3,12 @@ from .models import Course, CourseEnrollment, CourseClass
 from tlsa_server.models import TLSA_User
 from classes.models import Class
 
+
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'course_code', 'course_sequence', 'department', 'name']
+
 
 class CoursePatchSerializer(serializers.ModelSerializer):
     course_code = serializers.CharField(max_length=8, required=True)  # Required to locate the course
@@ -30,6 +32,7 @@ class CoursePatchSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f"Course with code {course_code} and sequence {course_sequence} does not exist.")
 
         return data
+
 
 class CourseEnrollmentSerializer(serializers.ModelSerializer):
     student_user_ids = serializers.ListField(
@@ -80,7 +83,8 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
             )
             enrollments.append(enrollment)
         return enrollments
-    
+
+
 class CourseEnrollmentGetSerializer(serializers.ModelSerializer):
     student_id = serializers.CharField(source='student.user_id', read_only=True)
     course_code = serializers.CharField(source='course.course_code', read_only=True)
@@ -89,7 +93,8 @@ class CourseEnrollmentGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseEnrollment
         fields = ['student_id', 'course_code', 'course_sequence']
-    
+
+
 class CourseClassSerializer(serializers.ModelSerializer):
     class_id = serializers.IntegerField(source='class_instance.id', write_only=True)
     course_code = serializers.CharField(source='course.course_code', write_only=True)

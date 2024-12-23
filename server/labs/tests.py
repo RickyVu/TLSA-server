@@ -2,27 +2,28 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from .models import Lab,ManageLab
+from .models import Lab, ManageLab
 from tlsa_server.models import TLSA_User
 import time
+
 
 class CourseViewTests(APITestCase):
     def setUp(self):
         # 创建测试用户
-        self.manager = TLSA_User.objects.create_user(username='manager', password='testpass',user_id = '2022012080')  
-        self.manager.role = 'manager'      
+        self.manager = TLSA_User.objects.create_user(username='manager', password='testpass', user_id='2022012080')
+        self.manager.role = 'manager'
         self.manager.save()
         # 创建客户端实例
         self.client = APIClient()
         # 登录教师用户
         self.client.force_authenticate(user=self.manager)
 
-        self.student = TLSA_User.objects.create_user(username='student', password='testpass',user_id = '2022012081')  
-        self.student.role = 'student'      
+        self.student = TLSA_User.objects.create_user(username='student', password='testpass', user_id='2022012081')
+        self.student.role = 'student'
         self.student.save()
 
-        self.teacher = TLSA_User.objects.create_user(username='teacher', password='testpass',user_id = '2022012082')  
-        self.teacher.role = 'teacher'      
+        self.teacher = TLSA_User.objects.create_user(username='teacher', password='testpass', user_id='2022012082')
+        self.teacher.role = 'teacher'
         self.teacher.save()
 
         self.client_secure1 = APIClient()
@@ -60,7 +61,6 @@ class CourseViewTests(APITestCase):
         response = self.client_secure2.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-
     def test_get_lab(self):
         """
         确保我们可以获取班级列表
@@ -96,7 +96,7 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.data[0]['name'], 'Test Lab')
 
     def test_create_managelab(self):
-        
+
         mng = self.manager
         laB = Lab.objects.create(name='Test Lab')
 
@@ -105,12 +105,12 @@ class CourseViewTests(APITestCase):
             'manager_user_id': mng.user_id,
             'lab_id': laB.id
         }
-        response = self.client.post(url, data,format = None)
+        response = self.client.post(url, data, format=None)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['manager']['manager_user_id'],mng.user_id)
+        self.assertEqual(response.data['manager']['manager_user_id'], mng.user_id)
 
     def test_create_managelab_secure(self):
-        
+
         mng = self.manager
         laB = Lab.objects.create(name='Test Lab')
 
@@ -119,9 +119,9 @@ class CourseViewTests(APITestCase):
             'manager_user_id': mng.user_id,
             'lab_id': laB.id
         }
-        response = self.client_secure1.post(url, data,format = None)
+        response = self.client_secure1.post(url, data, format=None)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        response = self.client_secure2.post(url, data,format = None)
+        response = self.client_secure2.post(url, data, format=None)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_managelab(self):
@@ -131,14 +131,14 @@ class CourseViewTests(APITestCase):
 
         ManageLab.objects.create(
             manager=mng,
-            lab = laB
+            lab=laB
         )
 
         url = reverse('lab-manager')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['lab_id'],laB.id)
+        self.assertEqual(response.data[0]['lab_id'], laB.id)
 
     def test_performance(self):
         start_time = time.time()

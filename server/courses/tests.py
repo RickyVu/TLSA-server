@@ -2,29 +2,30 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from .models import Course,CourseClass,CourseEnrollment
+from .models import Course, CourseClass, CourseEnrollment
 from classes.models import Class
 from tlsa_server.models import TLSA_User
+
 
 class CourseViewTests(APITestCase):
     def setUp(self):
         # 创建测试用户
-        self.teacher = TLSA_User.objects.create_user(username='teacher', password='testpass',user_id = '2022012080')  
-        self.teacher.role = 'teacher'      
+        self.teacher = TLSA_User.objects.create_user(username='teacher', password='testpass', user_id='2022012080')
+        self.teacher.role = 'teacher'
         self.teacher.save()
         # 创建客户端实例
         self.client = APIClient()
         # 登录教师用户
         self.client.force_authenticate(user=self.teacher)
 
-        self.student = TLSA_User.objects.create_user(username='student', password='testpass',user_id = '2022012081')  
-        self.student.role = 'student'      
+        self.student = TLSA_User.objects.create_user(username='student', password='testpass', user_id='2022012081')
+        self.student.role = 'student'
         self.student.save()
         self.client_secure1 = APIClient()
         self.client_secure1.force_authenticate(user=self.student)
 
-        self.manager = TLSA_User.objects.create_user(username='manager', password='testpass',user_id = '2022012082')  
-        self.manager.role = 'manager'      
+        self.manager = TLSA_User.objects.create_user(username='manager', password='testpass', user_id='2022012082')
+        self.manager.role = 'manager'
         self.manager.save()
         self.client_secure2 = APIClient()
         self.client_secure2.force_authenticate(user=self.manager)
@@ -61,7 +62,6 @@ class CourseViewTests(APITestCase):
         response = self.client_secure2.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-
     def test_get_course(self):
         """
         确保我们可以获取班级列表
@@ -73,7 +73,6 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['name'], 'Test Course')
-
 
     def test_get_course_by_id(self):
         """
@@ -100,14 +99,14 @@ class CourseViewTests(APITestCase):
     def test_create_courseclass(self):
 
         cse = Course.objects.create(course_code='00000001',
-            course_sequence='12345',
-            department='教学楼',
-            name='New Course'
-        )
+                                    course_sequence='12345',
+                                    department='教学楼',
+                                    name='New Course'
+                                    )
         cls = Class.objects.create(name='New Class',
-                      start_time = '2024-11-27 11:40:58.801197+00',
-                      created_at = '2024-11-27 11:40:58.801197+00',
-                      updated_at = '2024-11-27 11:40:58.801197+00')
+                                   start_time='2024-11-27 11:40:58.801197+00',
+                                   created_at='2024-11-27 11:40:58.801197+00',
+                                   updated_at='2024-11-27 11:40:58.801197+00')
 
         url = reverse('course-class')
         data = {
@@ -122,19 +121,19 @@ class CourseViewTests(APITestCase):
     def test_create_courseclass_secure(self):
 
         cse = Course.objects.create(course_code='00000001',
-            course_sequence='12345',
-            department='教学楼',
-            name='New Course')
+                                    course_sequence='12345',
+                                    department='教学楼',
+                                    name='New Course')
         cls = Class.objects.create(name='New Class',
-                      start_time = '2024-11-27 11:40:58.801197+00',
-                      created_at = '2024-11-27 11:40:58.801197+00',
-                      updated_at = '2024-11-27 11:40:58.801197+00')
+                                   start_time='2024-11-27 11:40:58.801197+00',
+                                   created_at='2024-11-27 11:40:58.801197+00',
+                                   updated_at='2024-11-27 11:40:58.801197+00')
 
         url = reverse('course-class')
         data = {
             'class_id': cls.id,
             'course_code': cse.course_code,
-            'course_sequence' : cse.course_sequence
+            'course_sequence': cse.course_sequence
         }
 
         response = self.client_secure1.post(url, data, format='json')
@@ -146,17 +145,17 @@ class CourseViewTests(APITestCase):
 
         stt = self.student
         cse = Course.objects.create(course_code='00000001',
-            course_sequence='12345',
-            department='教学楼',
-            name='New Course')
+                                    course_sequence='12345',
+                                    department='教学楼',
+                                    name='New Course')
 
-        data = {          
-            'student_user_ids' : [stt.user_id],
-            'course_code' : cse.course_code,
-            'course_sequence' : cse.course_sequence
+        data = {
+            'student_user_ids': [stt.user_id],
+            'course_code': cse.course_code,
+            'course_sequence': cse.course_sequence
         }
         url = reverse('course-enrollment')
-        response = self.client.post(url, data,format = None)
+        response = self.client.post(url, data, format=None)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['enrollment']['course_id'], cse.id)
 
@@ -164,16 +163,16 @@ class CourseViewTests(APITestCase):
 
         stt = self.student
         cse = Course.objects.create(course_code='00000001',
-            course_sequence='12345',
-            department='教学楼',
-            name='New Course')
+                                    course_sequence='12345',
+                                    department='教学楼',
+                                    name='New Course')
 
-        data = {          
-            'student_ids' : [stt.id],
-            'course_id' : cse.id
+        data = {
+            'student_ids': [stt.id],
+            'course_id': cse.id
         }
         url = reverse('course-enrollment')
-        response = self.client_secure1.post(url, data,format = None)
+        response = self.client_secure1.post(url, data, format=None)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        response = self.client_secure1.post(url, data,format = None)
+        response = self.client_secure1.post(url, data, format=None)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

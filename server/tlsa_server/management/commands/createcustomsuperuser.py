@@ -4,6 +4,7 @@ from django.db import IntegrityError
 
 User = get_user_model()
 
+
 class Command(BaseCommand):
     help = 'Create a superuser with a custom user_id'
 

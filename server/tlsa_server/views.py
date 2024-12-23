@@ -7,12 +7,13 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExampl
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.views import APIView
-from .serializers import (TLSAUserSerializer, 
-                          UserRegistrationSerializer, 
-                          StaffRegistrationSerializer, 
-                          UserLoginSerializer, 
-                          RefreshTokenSerializer, 
+from .serializers import (TLSAUserSerializer,
+                          UserRegistrationSerializer,
+                          StaffRegistrationSerializer,
+                          UserLoginSerializer,
+                          RefreshTokenSerializer,
                           UserInfoPatchSerializer)
+
 
 class RegisterView(APIView):
     """Register a new user."""
@@ -75,7 +76,8 @@ class RegisterView(APIView):
             return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
 class RegisterStaffView(APIView):
     """Register a new staff user (teacher or manager)."""
     serializer_class = StaffRegistrationSerializer
@@ -144,6 +146,7 @@ class RegisterStaffView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LoginView(APIView):
     """Login user and return JWT tokens."""
 
@@ -173,6 +176,7 @@ class LoginView(APIView):
             })
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserInfoView(APIView):
     """Retrieve user information based on user_id."""
@@ -255,7 +259,8 @@ class UserInfoView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
-        
+
+
 class ValidateTokenView(APIView):
     """Validate a JWT token."""
 
@@ -267,7 +272,8 @@ class ValidateTokenView(APIView):
             return Response({"valid": True, "user_id": token_obj['user_id']})
         except TokenError:
             return Response({"valid": False}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
+
 class RefreshTokenView(APIView):
     """Refresh access token using refresh token."""
 
@@ -290,7 +296,7 @@ class RefreshTokenView(APIView):
                 })
             except TokenError:
                 return Response({"error": "Invalid refresh token."}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
