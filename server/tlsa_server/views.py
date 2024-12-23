@@ -191,6 +191,7 @@ class UserInfoView(APIView):
     serializer_class = TLSAUserSerializer
 
     def get_permissions(self):
+        # IMPORTANT: GET method may have additional user role behaviours defined
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'PATCH':
@@ -234,7 +235,7 @@ class UserInfoView(APIView):
         users = User.objects.filter(**filters)
 
         # Check if the requesting user is allowed to view the information
-        if request.user.role in ['teacher', 'manager', 'student']:
+        if request.user.role in ['teacher', 'manager', 'student', 'teachingAffairs']:
             serializer = self.serializer_class(users, many=True)
             return Response(serializer.data)
         elif request.user.role == 'student':
@@ -279,6 +280,7 @@ class ChangeUserRoleView(APIView):
     serializer_class = TLSAUserSerializer
 
     def get_permissions(self):
+        # IMPORTANT: GET method may have additional user role behaviours defined
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'PATCH':
@@ -322,7 +324,7 @@ class ChangeUserRoleView(APIView):
         users = User.objects.filter(**filters)
 
         # Check if the requesting user is allowed to view the information
-        if request.user.role in ['teacher', 'manager', 'student']:
+        if request.user.role in ['teacher', 'manager', 'student', 'teachingAffairs']:
             serializer = self.serializer_class(users, many=True)
             return Response(serializer.data)
         elif request.user.role == 'student':
