@@ -98,6 +98,7 @@ class CourseView(APIView):
 
     def _get_personal_courses_filters(self, user):
         filters = {}
+        result_courses = []
         if user.role == "student":
             result_courses = CourseEnrollment.objects.filter(student=user).values_list('course__course_code', 'course__course_sequence')
         elif user.role == "teacher":

@@ -25,6 +25,7 @@ class Lab(models.Model):
     safety_equipments = models.JSONField(default=list, blank=True, null=True)
     safety_notes = models.TextField(blank=True, null=True)
     lab_image = models.ImageField(upload_to=RandomFileName('lab_images/'), blank=True, null=True)
+    map_image = models.ImageField(upload_to=RandomFileName('lab_map/'), blank=True, null=True)
     def __str__(self):
         return self.name
 
