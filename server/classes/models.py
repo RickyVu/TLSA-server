@@ -64,10 +64,10 @@ class Experiment(models.Model):
     ]
 
     title = models.CharField(max_length=200)
-    estimated_time = models.DurationField()
+    estimated_time = models.FloatField()
     safety_tags = models.JSONField(default=list)
-    experiment_method_tags = models.CharField(max_length=50, choices=EXPERIMENT_METHOD_CHOICES)
-    submission_type_tags = models.CharField(max_length=50, choices=SUBMISSION_TYPE_CHOICES)
+    experiment_method_tags = models.CharField(max_length=50)
+    submission_type_tags = models.CharField(max_length=50)
     other_tags = models.JSONField(default=list)
     description = models.TextField(blank=True, null=True)
     class_id = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='experiments')

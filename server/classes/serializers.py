@@ -101,7 +101,7 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'description': {'required': True},
             'safety_tags': {'required': False, 'allow_null': True, 'default': []},
             'submission_type_tags': {'required': True},
-            'estimated_time': {'required': False, 'allow_null': True, 'default': None},
+            'estimated_time': {'required': False, 'default': 0},
             'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }
@@ -122,7 +122,7 @@ class ExperimentPatchSerializer(serializers.ModelSerializer):
             'description': {'required': False},
             'safety_tags': {'required': False, 'allow_null': True, 'default': []},
             'submission_type_tags': {'required': False},
-            'estimated_time': {'required': False, 'allow_null': True, 'default': None},
+            'estimated_time': {'required': False, 'default': 0},
             'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }

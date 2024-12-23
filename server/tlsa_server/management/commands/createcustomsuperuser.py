@@ -24,7 +24,7 @@ class Command(BaseCommand):
                 username=username,
                 email=email,
                 password=password,
-                role='manager'
+                role='teachingAffairs'
             )
             self.stdout.write(self.style.SUCCESS(f'Superuser created successfully with user_id: {user_id}'))
         except IntegrityError:

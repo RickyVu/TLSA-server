@@ -22,4 +22,4 @@ class IsTeachingAffairs(BasePermission):
     """Allow high clearance access to system."""
     
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'teacherAffairs'
+        return request.user.is_authenticated and request.user.role == 'teachingAffairs'
