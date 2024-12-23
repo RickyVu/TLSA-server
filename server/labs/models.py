@@ -1,22 +1,29 @@
 from django.db import models
 from tlsa_server.models import TLSA_User
 import os
-import uuid
+from datetime import datetime
 from django.utils.deconstruct import deconstructible
 
-# Random filename generator
 @deconstructible
-class RandomFileName(object):
+class DateTimeFileName(object):
     def __init__(self, path):
         self.path = path
 
     def __call__(self, instance, filename):
         # Get the file extension
         ext = filename.split('.')[-1]
-        # Generate a random UUID
-        filename = f"{uuid.uuid4()}.{ext}"
+        
+        # Get the original filename (without extension)
+        original_name = os.path.splitext(filename)[0]
+        
+        # Get the current datetime in a readable format
+        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create the new filename
+        new_filename = f"{original_name}-{current_datetime}.{ext}"
+        
         # Return the full path
-        return os.path.join(self.path, filename)
+        return os.path.join(self.path, new_filename)
 
 
 class Lab(models.Model):
@@ -24,8 +31,8 @@ class Lab(models.Model):
     location = models.CharField(max_length=255)
     safety_equipments = models.JSONField(default=list, blank=True, null=True)
     safety_notes = models.TextField(blank=True, null=True)
-    lab_image = models.ImageField(upload_to=RandomFileName('lab_images/'), blank=True, null=True)
-    map_image = models.ImageField(upload_to=RandomFileName('lab_map/'), blank=True, null=True)
+    lab_image = models.ImageField(upload_to=DateTimeFileName('lab_images/'), blank=True, null=True)
+    map_image = models.ImageField(upload_to=DateTimeFileName('lab_map/'), blank=True, null=True)
     def __str__(self):
         return self.name
 

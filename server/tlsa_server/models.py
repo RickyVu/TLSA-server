@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator, MinLengthValidator, MaxLengthValidator
 from django.db import models
 import os
-import uuid
+from datetime import datetime
 from django.utils.deconstruct import deconstructible
 
 # Custom validator to ensure the user_id contains only numbers
@@ -12,17 +12,25 @@ numeric_validator = RegexValidator(
 )
 
 @deconstructible
-class RandomFileName(object):
+class DateTimeFileName(object):
     def __init__(self, path):
         self.path = path
 
     def __call__(self, instance, filename):
         # Get the file extension
         ext = filename.split('.')[-1]
-        # Generate a random UUID
-        filename = f"{uuid.uuid4()}.{ext}"
+        
+        # Get the original filename (without extension)
+        original_name = os.path.splitext(filename)[0]
+        
+        # Get the current datetime in a readable format
+        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create the new filename
+        new_filename = f"{original_name}-{current_datetime}.{ext}"
+        
         # Return the full path
-        return os.path.join(self.path, filename)
+        return os.path.join(self.path, new_filename)
 
 class TLSA_User(AbstractUser):
     ROLE_CHOICES = (
@@ -34,7 +42,7 @@ class TLSA_User(AbstractUser):
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
-    profile_picture = models.ImageField(upload_to=RandomFileName('profile_pics/'), blank=True, null=True)
+    profile_picture = models.ImageField(upload_to=DateTimeFileName('profile_pics/'), blank=True, null=True)
     real_name = models.CharField(max_length=150, blank=True, null=True)
     department = models.CharField(max_length=50, blank=True, null=True)
 

@@ -3,20 +3,28 @@ from tlsa_server.models import TLSA_User
 from labs.models import Lab
 from django.utils.deconstruct import deconstructible
 import os
-import uuid
+from datetime import datetime
 
 @deconstructible
-class RandomFileName(object):
+class DateTimeFileName(object):
     def __init__(self, path):
         self.path = path
 
     def __call__(self, instance, filename):
         # Get the file extension
         ext = filename.split('.')[-1]
-        # Generate a random UUID
-        filename = f"{uuid.uuid4()}.{ext}"
+        
+        # Get the original filename (without extension)
+        original_name = os.path.splitext(filename)[0]
+        
+        # Get the current datetime in a readable format
+        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create the new filename
+        new_filename = f"{original_name}-{current_datetime}.{ext}"
+        
         # Return the full path
-        return os.path.join(self.path, filename)
+        return os.path.join(self.path, new_filename)
 
 
 class Class(models.Model):
@@ -77,14 +85,14 @@ class Experiment(models.Model):
     
 class ExperimentImage(models.Model):
     experiment = models.ForeignKey(Experiment, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=RandomFileName('experiment_images/'))
+    image = models.ImageField(upload_to=DateTimeFileName('experiment_images/'))
 
     def __str__(self):
         return f"Image for {self.experiment.title}"
 
 class ExperimentFile(models.Model):
     experiment = models.ForeignKey(Experiment, related_name='files', on_delete=models.CASCADE)
-    file = models.FileField(upload_to=RandomFileName('experiment_files/'))
+    file = models.FileField(upload_to=DateTimeFileName('experiment_files/'))
 
     def __str__(self):
         return f"File for {self.experiment.title}"

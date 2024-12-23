@@ -93,7 +93,7 @@ class ExperimentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Experiment
         fields = [
-            'title', 'estimated_time', 'safety_tags', 'experiment_method_tags',
+            'id', 'title', 'estimated_time', 'safety_tags', 'experiment_method_tags',
             'submission_type_tags', 'other_tags', 'description', 'class_id', 'images', 'files'
         ]
         extra_kwargs = {
