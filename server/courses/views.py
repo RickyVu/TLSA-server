@@ -4,11 +4,11 @@ from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, CourseEnrollment
-from .serializers import (CourseSerializer, 
-                          CourseEnrollmentSerializer, 
-                          CourseClassSerializer, 
-                          CourseClassGetSerializer, 
-                          CoursePatchSerializer, 
+from .serializers import (CourseSerializer,
+                          CourseEnrollmentSerializer,
+                          CourseClassSerializer,
+                          CourseClassGetSerializer,
+                          CoursePatchSerializer,
                           CourseEnrollmentGetSerializer)
 from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs
 from classes.models import (TeachClass, ClassLocation)
@@ -152,12 +152,7 @@ class CourseView(APIView):
                 status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-<<<<<<< HEAD
 
-    @permission_classes([IsTeacher])
-=======
-    
->>>>>>> tlsa/dev-ricky
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -428,13 +423,13 @@ class CourseClassView(APIView):
         if class_id:
             course_classes = course_classes.filter(class_instance__id=class_id)
 
-        #if not course_classes.exists():
+        # if not course_classes.exists():
         #    return Response({"message": "No matching records found."}, status=status.HTTP_404_NOT_FOUND)
 
         print(course_classes)
         serializer = CourseClassGetSerializer(course_classes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     @extend_schema(
         parameters=[
             OpenApiParameter(

@@ -15,6 +15,7 @@ from .serializers import (TLSAUserSerializer,
                           UserInfoPatchSerializer)
 from .permissions import IsTeachingAffairs
 
+
 class RegisterView(APIView):
     """Register a new user."""
     serializer_class = UserRegistrationSerializer
@@ -262,6 +263,9 @@ class UserInfoView(APIView):
             return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if the requesting user is allowed to update the user information
+        print(request.user.role)
+        print(request.user.user_id)
+        print(user_id)
         if request.user.role in ['teacher', 'manager'] or request.user.user_id == user_id:
             serializer = UserInfoPatchSerializer(user_instance, data=request.data, partial=True)
             if serializer.is_valid():
@@ -276,7 +280,8 @@ class UserInfoView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
-        
+
+
 class ChangeUserRoleView(APIView):
     """Change user role."""
     authentication_classes = [JWTAuthentication]
@@ -365,6 +370,7 @@ class ChangeUserRoleView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
+
 
 class ValidateTokenView(APIView):
     """Validate a JWT token."""

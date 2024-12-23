@@ -3,8 +3,6 @@ from tlsa_server.models import TLSA_User
 from classes.models import Class
 from django.core.validators import RegexValidator, MinLengthValidator, MaxLengthValidator
 
-from django.db import models
-
 
 class Course(models.Model):
     course_code = models.CharField(max_length=8, verbose_name="Course Code")  # 课程号 (8 characters)

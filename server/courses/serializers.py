@@ -115,9 +115,8 @@ class CourseClassSerializer(serializers.ModelSerializer):
             class_instance=class_instance,
             course=course,
         )
-<<<<<<< HEAD
-=======
-    
+
+
 class CourseClassGetSerializer(serializers.ModelSerializer):
     class_id = serializers.IntegerField(source='class_instance.id')
     course_code = serializers.CharField(source='course.course_code')
@@ -126,4 +125,3 @@ class CourseClassGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseClass
         fields = ['class_id', 'course_code', 'course_sequence']
->>>>>>> tlsa/dev-ricky

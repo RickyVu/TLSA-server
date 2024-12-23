@@ -2,7 +2,8 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
-from .models import Class
+from .models import Class,Experiment
+from labs.models import Lab
 from tlsa_server.models import TLSA_User
 
 
@@ -103,3 +104,126 @@ class ClassViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['name'], 'Test Class')
+
+    def test_create_teacherclass(self):
+        class_instance = Class.objects.create(name='Test Class',
+                             start_time='2024-11-27 11:40:58.801197+00',
+                             created_at='2024-11-27 11:40:58.801197+00',
+                             updated_at='2024-11-27 11:40:58.801197+00')
+        url = reverse('teach-class')
+        data = {
+            'class_id': class_instance.id,
+            'teacher_id': self.teacher.user_id
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_teacherclass(self):
+        class_instance = Class.objects.create(name='Test Class',
+                             start_time='2024-11-27 11:40:58.801197+00',
+                             created_at='2024-11-27 11:40:58.801197+00',
+                             updated_at='2024-11-27 11:40:58.801197+00')
+        url = reverse('teach-class')
+        data = {
+            'class_id': class_instance.id,
+            'teacher_id': self.teacher.user_id
+        }
+        response = self.client.post(url, data)
+        url = f'{reverse('teach-class')}?class_id={class_instance.id}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_teacherclass(self):
+        class_instance = Class.objects.create(name='Test Class',
+                             start_time='2024-11-27 11:40:58.801197+00',
+                             created_at='2024-11-27 11:40:58.801197+00',
+                             updated_at='2024-11-27 11:40:58.801197+00')
+        url = reverse('teach-class')
+        data = {
+            'class_id': class_instance.id,
+            'teacher_id': self.teacher.user_id
+        }
+        response = self.client.post(url, data)
+        url = f'{reverse('teach-class')}?class_id={class_instance.id}&teacher_id={self.teacher.user_id}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_create_classlocation(self):
+        class_instance = Class.objects.create(name='Test Class',
+                             start_time='2024-11-27 11:40:58.801197+00',
+                             created_at='2024-11-27 11:40:58.801197+00',
+                             updated_at='2024-11-27 11:40:58.801197+00')
+        lab_instance = Lab.objects.create(name='Test Lab')
+        url = reverse('class-location')
+        data = {
+            'class_id': class_instance.id,
+            'lab_id': lab_instance.id
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_classlocation(self):
+        class_instance = Class.objects.create(name='Test Class',
+                             start_time='2024-11-27 11:40:58.801197+00',
+                             created_at='2024-11-27 11:40:58.801197+00',
+                             updated_at='2024-11-27 11:40:58.801197+00')
+        lab_instance = Lab.objects.create(name='Test Lab')
+        url = reverse('class-location')
+        data = {
+            'class_id': class_instance.id,
+            'lab_id': lab_instance.id
+        }
+        response = self.client.post(url, data)
+        url = f'{reverse('class-location')}?class_id={class_instance.id}'
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_classlocation(self):
+        class_instance = Class.objects.create(name='Test Class',
+                             start_time='2024-11-27 11:40:58.801197+00',
+                             created_at='2024-11-27 11:40:58.801197+00',
+                             updated_at='2024-11-27 11:40:58.801197+00')
+        lab_instance = Lab.objects.create(name='Test Lab')
+        url = reverse('class-location')
+        data = {
+            'class_id': class_instance.id,
+            'lab_id': lab_instance.id
+        }
+        response = self.client.post(url, data)
+        url = f'{reverse('class-location')}?class_id={class_instance.id}&lab_id={lab_instance.id}'
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_create_commenttoclass(self):
+        self.assertEqual(1,1)
+
+    def test_create_experiment(self):
+        class_instance = Class.objects.create(name='Test Class',
+                             start_time='2024-11-27 11:40:58.801197+00',
+                             created_at='2024-11-27 11:40:58.801197+00',
+                             updated_at='2024-11-27 11:40:58.801197+00')
+        data = {
+            "title": "experiment",
+            "estimated_time": 1,
+            "safety_tags": ["1","2","3"],
+            "experiment_method_tags": "individual",
+            "submission_type_tags": "paper_report",
+            "other_tags": ["1","2","3"],
+            "description": "use_git",
+            "class_id": class_instance.id,
+            "images": ["image1.jpg", "image2.jpg"],
+            "files": ["instructions.pdf", "data_sheet.xlsx"]
+        }
+        url = reverse('experiment-list')
+        response0 = self.client.post(url, data)
+        self.assertEqual(response0.status_code, status.HTTP_201_CREATED)
+
+        url = f'{reverse('experiment-list')}?class_id = {class_instance.id}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        url = f'{reverse('experiment-list')}?experiment_id={1}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

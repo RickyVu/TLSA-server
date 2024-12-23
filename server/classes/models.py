@@ -5,6 +5,7 @@ from django.utils.deconstruct import deconstructible
 import os
 import uuid
 
+
 @deconstructible
 class RandomFileName(object):
     def __init__(self, path):
@@ -17,7 +18,6 @@ class RandomFileName(object):
         filename = f"{uuid.uuid4()}.{ext}"
         # Return the full path
         return os.path.join(self.path, filename)
-
 
 
 class Class(models.Model):
@@ -54,8 +54,6 @@ class ClassComment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.sender_id} on Class {self.class_id}"
-<<<<<<< HEAD
-=======
 
 
 class Experiment(models.Model):
@@ -80,7 +78,8 @@ class Experiment(models.Model):
 
     def __str__(self):
         return self.title
-    
+
+
 class ExperimentImage(models.Model):
     experiment = models.ForeignKey(Experiment, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to=RandomFileName('experiment_images/'))
@@ -88,10 +87,10 @@ class ExperimentImage(models.Model):
     def __str__(self):
         return f"Image for {self.experiment.title}"
 
+
 class ExperimentFile(models.Model):
     experiment = models.ForeignKey(Experiment, related_name='files', on_delete=models.CASCADE)
     file = models.FileField(upload_to=RandomFileName('experiment_files/'))
 
     def __str__(self):
         return f"File for {self.experiment.title}"
->>>>>>> tlsa/dev-ricky

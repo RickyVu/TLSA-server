@@ -77,8 +77,6 @@ class ClassCommentWithoutSenderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassComment
         fields = ['class_id', 'content']
-<<<<<<< HEAD
-=======
 
 
 # -----------------------------------------------
@@ -89,10 +87,12 @@ class ExperimentImageSerializer(serializers.ModelSerializer):
         model = ExperimentImage
         fields = ['image']
 
+
 class ExperimentFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExperimentFile
         fields = ['file']
+
 
 class ExperimentSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(queryset=Class.objects.all())
@@ -115,6 +115,7 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }
 
+
 class ExperimentPatchSerializer(serializers.ModelSerializer):
     class_id = serializers.PrimaryKeyRelatedField(queryset=Class.objects.all(), required=False)
     images = ExperimentImageSerializer(many=True, read_only=True)
@@ -135,4 +136,3 @@ class ExperimentPatchSerializer(serializers.ModelSerializer):
             'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }
->>>>>>> tlsa/dev-ricky

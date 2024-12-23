@@ -3,32 +3,22 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-<<<<<<< HEAD
-from tlsa_server.permissions import IsAuthenticated, IsTeacher
+from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs, IsManager
 from .models import (Class,
                      TeachClass,
                      ClassLocation,
-                     ClassComment)
-from .serializers import (ClassSerializer,
-                          TeachClassSerializer,
-=======
-from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs, IsManager
-from .models import (Class, 
-                     TeachClass, 
-                     ClassLocation, 
                      ClassComment,
                      Experiment,
                      ExperimentImage,
                      ExperimentFile)
-from .serializers import (ClassSerializer, 
-                          TeachClassSerializer, 
->>>>>>> tlsa/dev-ricky
+from .serializers import (ClassSerializer,
+                          TeachClassSerializer,
                           ClassLocationSerializer,
                           ClassOutputSerializer,
                           ClassPatchSerializer,
-                          ClassCommentSerializer, 
-                          ClassCommentWithoutSenderSerializer, 
-                          ExperimentSerializer, 
+                          ClassCommentSerializer,
+                          ClassCommentWithoutSenderSerializer,
+                          ExperimentSerializer,
                           ExperimentPatchSerializer,
                           ExperimentImageSerializer,
                           ExperimentFileSerializer)
@@ -439,10 +429,6 @@ class ClassLocationView(APIView):
 
 class CommentToClassView(APIView):
     authentication_classes = [JWTAuthentication]
-<<<<<<< HEAD
-    permission_classes = [IsAuthenticated]
-
-=======
 
     def get_permissions(self):
         if self.request.method == 'GET':
@@ -452,8 +438,7 @@ class CommentToClassView(APIView):
         elif self.request.method == 'DELETE':
             return [IsTeacher() or IsTeachingAffairs()]
         return []
-    
->>>>>>> tlsa/dev-ricky
+
     @extend_schema(
         request=ClassCommentWithoutSenderSerializer,
     )
@@ -555,11 +540,10 @@ class CommentToClassView(APIView):
 
         comment.delete()
         return Response({"message": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-<<<<<<< HEAD
-=======
-    
+
 # -----------------------------------------------
 # Experiment
+
 
 class ExperimentView(APIView):
     serializer_class = ExperimentSerializer
@@ -792,4 +776,3 @@ class ExperimentView(APIView):
 
         experiment.delete()
         return Response({"message": "Experiment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
->>>>>>> tlsa/dev-ricky
