@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+<<<<<<< HEAD
 from tlsa_server.permissions import IsAuthenticated, IsTeacher
 from .models import (Class,
                      TeachClass,
@@ -10,10 +11,27 @@ from .models import (Class,
                      ClassComment)
 from .serializers import (ClassSerializer,
                           TeachClassSerializer,
+=======
+from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs, IsManager
+from .models import (Class, 
+                     TeachClass, 
+                     ClassLocation, 
+                     ClassComment,
+                     Experiment,
+                     ExperimentImage,
+                     ExperimentFile)
+from .serializers import (ClassSerializer, 
+                          TeachClassSerializer, 
+>>>>>>> tlsa/dev-ricky
                           ClassLocationSerializer,
                           ClassOutputSerializer,
                           ClassPatchSerializer,
-                          ClassCommentSerializer, ClassCommentWithoutSenderSerializer)
+                          ClassCommentSerializer, 
+                          ClassCommentWithoutSenderSerializer, 
+                          ExperimentSerializer, 
+                          ExperimentPatchSerializer,
+                          ExperimentImageSerializer,
+                          ExperimentFileSerializer)
 from courses.models import (CourseClass, CourseEnrollment)
 from labs.models import (ManageLab)
 
@@ -26,11 +44,11 @@ class ClassView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher()]
+            return [IsTeacher() or IsTeachingAffairs()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher()]
+            return [IsTeacher() or IsTeachingAffairs()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher()]
+            return [IsTeacher() or IsTeachingAffairs()]
         return []
 
     @extend_schema(
@@ -186,6 +204,15 @@ class ClassView(APIView):
 class TeacherClassView(APIView):
     serializer_class = TeachClassSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
+        return []
+
     @extend_schema(
         request=TeachClassSerializer,
     )
@@ -295,6 +322,15 @@ class TeacherClassView(APIView):
 class ClassLocationView(APIView):
     serializer_class = ClassLocationSerializer
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
+        return []
+
     @extend_schema(
         request=ClassLocationSerializer,
     )
@@ -403,8 +439,21 @@ class ClassLocationView(APIView):
 
 class CommentToClassView(APIView):
     authentication_classes = [JWTAuthentication]
+<<<<<<< HEAD
     permission_classes = [IsAuthenticated]
 
+=======
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsAuthenticated()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsTeachingAffairs()]
+        return []
+    
+>>>>>>> tlsa/dev-ricky
     @extend_schema(
         request=ClassCommentWithoutSenderSerializer,
     )
@@ -506,3 +555,241 @@ class CommentToClassView(APIView):
 
         comment.delete()
         return Response({"message": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+<<<<<<< HEAD
+=======
+    
+# -----------------------------------------------
+# Experiment
+
+class ExperimentView(APIView):
+    serializer_class = ExperimentSerializer
+    authentication_classes = [JWTAuthentication]
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+        return []
+
+    @extend_schema(
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "estimated_time": {"type": "number"},
+                    "safety_tags": {"type": "array", "items": {"type": "string"}},
+                    "experiment_method_tags": {"type": "string"},
+                    "submission_type_tags": {"type": "string"},
+                    "other_tags": {"type": "array", "items": {"type": "string"}},
+                    "description": {"type": "string"},
+                    "class_id": {"type": "integer"},
+                    "images": {"type": "array", "items": {"type": "string", "format": "binary"}},
+                    "files": {"type": "array", "items": {"type": "string", "format": "binary"}},
+                },
+            }
+        },
+        examples=[
+            OpenApiExample(
+                "Example Request",
+                description="Example of a request to partially update an experiment with images and files.",
+                value={
+                    "id": 1,
+                    "title": "Updated Experiment Title",
+                    "description": "Updated description of the experiment.",
+                    "images": ["image1.jpg", "image2.jpg"],
+                    "files": ["instructions.pdf", "data_sheet.xlsx"],
+                },
+                request_only=True,
+            ),
+        ],
+    )
+    def post(self, request, format=None):
+        experiment_data = {
+            'title': request.data.get('title'),
+            'estimated_time': request.data.get('estimated_time'),
+            'safety_tags': request.data.get('safety_tags'),
+            'experiment_method_tags': request.data.get('experiment_method_tags'),
+            'submission_type_tags': request.data.get('submission_type_tags'),
+            'other_tags': request.data.get('other_tags'),
+            'description': request.data.get('description'),
+            'class_id': request.data.get('class_id'),
+        }
+
+        experiment_serializer = ExperimentSerializer(data=experiment_data)
+        if experiment_serializer.is_valid():
+            experiment = experiment_serializer.save()
+
+            images = request.FILES.getlist('images')
+            for image in images:
+                ExperimentImage.objects.create(experiment=experiment, image=image)
+
+            files = request.FILES.getlist('files')
+            for file in files:
+                ExperimentFile.objects.create(experiment=experiment, file=file)
+
+            return Response(
+                {
+                    "message": "Experiment created successfully.",
+                    "experiment": experiment_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(experiment_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='experiment_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Query by experiment_id',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='class_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Filter by class_id',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='description',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Query by description (similarity)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='safety_tag',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter by safety tag (similarity)',
+                required=False,
+            ),
+        ],
+        responses={
+            200: ExperimentSerializer(many=True),
+        },
+    )
+    def get(self, request, format=None):
+        serializer_class = ExperimentSerializer
+        experiment_id = request.query_params.get('experiment_id')
+        class_id = request.query_params.get('class_id')
+        description = request.query_params.get('description')
+        safety_tag = request.query_params.get('safety_tag')
+
+        experiments = Experiment.objects.all()
+
+        if experiment_id:
+            experiments = experiments.filter(id=experiment_id)
+        if class_id:
+            experiments = experiments.filter(class_id=class_id)
+        if description:
+            experiments = experiments.filter(description__icontains=description)
+        if safety_tag:
+            experiments = experiments.filter(safety_tags__icontains=safety_tag)
+
+        serializer = serializer_class(experiments, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "title": {"type": "string"},
+                    "estimated_time": {"type": "number"},
+                    "safety_tags": {"type": "array", "items": {"type": "string"}},
+                    "experiment_method_tags": {"type": "string"},
+                    "submission_type_tags": {"type": "string"},
+                    "other_tags": {"type": "array", "items": {"type": "string"}},
+                    "description": {"type": "string"},
+                    "class_id": {"type": "integer"},
+                    "images": {"type": "array", "items": {"type": "string", "format": "binary"}},
+                    "files": {"type": "array", "items": {"type": "string", "format": "binary"}},
+                },
+            }
+        },
+        examples=[
+            OpenApiExample(
+                "Example Request",
+                description="Example of a request to partially update an experiment with images and files.",
+                value={
+                    "id": 1,
+                    "title": "Updated Experiment Title",
+                    "description": "Updated description of the experiment.",
+                    "images": ["image1.jpg", "image2.jpg"],
+                    "files": ["instructions.pdf", "data_sheet.xlsx"],
+                },
+                request_only=True,
+            ),
+        ],
+    )
+    def patch(self, request, format=None):
+        experiment_id = request.data.get('id')
+        try:
+            experiment = Experiment.objects.get(id=experiment_id)
+        except Experiment.DoesNotExist:
+            return Response({"message": "Experiment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ExperimentPatchSerializer(experiment, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            images = request.FILES.getlist('images')
+            for image in images:
+                ExperimentImage.objects.create(experiment=experiment, image=image)
+
+            files = request.FILES.getlist('files')
+            for file in files:
+                ExperimentFile.objects.create(experiment=experiment, file=file)
+
+            return Response(
+                {
+                    "message": "Experiment updated successfully.",
+                    "experiment": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='experiment_id',
+                type=int,
+                location=OpenApiParameter.QUERY,
+                description='Experiment ID to delete',
+                required=True,
+            ),
+        ],
+        responses={
+            204: OpenApiExample(
+                name="Experiment deleted",
+                value={"message": "Experiment deleted successfully."},
+                response_only=True,
+            ),
+            404: OpenApiExample(
+                name="Experiment not found",
+                value={"message": "Experiment not found."},
+                response_only=True,
+            ),
+        },
+    )
+    def delete(self, request, format=None):
+        experiment_id = request.query_params.get('experiment_id')
+        try:
+            experiment = Experiment.objects.get(id=experiment_id)
+        except Experiment.DoesNotExist:
+            return Response({"message": "Experiment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        experiment.delete()
+        return Response({"message": "Experiment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+>>>>>>> tlsa/dev-ricky

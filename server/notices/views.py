@@ -5,13 +5,23 @@ from .models import Notice, NoticeCompletion, NoticeContent, NoticeTag, NoticeCo
 from .serializers import NoticeSerializer, NoticeCompletionSerializer, NoticeContentSerializer, NoticeTagSerializer, NoticeContentTagSerializer, NoticeRowSerializer, NoticeGetSerializer, NoticePatchSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework.decorators import permission_classes
-from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager
+from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager, IsTeachingAffairs
 
 
 class NoticeView(APIView):
     serializer_class = NoticeSerializer
 
-    @permission_classes([IsManager])
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsManager()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager()]
+        return []
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -25,7 +35,6 @@ class NoticeView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsAuthenticated])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -73,7 +82,6 @@ class NoticeView(APIView):
         serializer = serializer_class(notices, many=True)
         return Response(serializer.data)
 
-    @permission_classes([IsManager])
     @extend_schema(
         request=NoticePatchSerializer,
         responses={
@@ -109,7 +117,6 @@ class NoticeView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsManager])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -147,7 +154,17 @@ class NoticeView(APIView):
 class NoticeCompletionView(APIView):
     serializer_class = NoticeCompletionSerializer
 
-    @permission_classes([IsManager])
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsManager()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager()]
+        return []
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -161,7 +178,6 @@ class NoticeCompletionView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsAuthenticated])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -188,7 +204,6 @@ class NoticeCompletionView(APIView):
         serializer = self.serializer_class(completions, many=True)
         return Response(serializer.data)
 
-    @permission_classes([IsManager])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -226,7 +241,17 @@ class NoticeCompletionView(APIView):
 class NoticeContentView(APIView):
     serializer_class = NoticeContentSerializer
 
-    @permission_classes([IsManager])
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager()]
+        elif self.request.method == 'PATCH':
+            return [IsTeacher() or IsManager()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager()]
+        return []
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -240,7 +265,6 @@ class NoticeContentView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsAuthenticated])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -288,7 +312,6 @@ class NoticeContentView(APIView):
         serializer = self.serializer_class(contents, many=True)
         return Response(serializer.data)
 
-    @permission_classes([IsManager])
     @extend_schema(
         request=NoticeContentSerializer,
         responses={
@@ -324,7 +347,6 @@ class NoticeContentView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsManager])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -362,7 +384,15 @@ class NoticeContentView(APIView):
 class NoticeTagView(APIView):
     serializer_class = NoticeTagSerializer
 
-    @permission_classes([IsManager])
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs()]
+        return []
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -376,7 +406,6 @@ class NoticeTagView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsAuthenticated])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -403,7 +432,6 @@ class NoticeTagView(APIView):
         serializer = self.serializer_class(tags, many=True)
         return Response(serializer.data)
 
-    @permission_classes([IsManager])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -441,7 +469,15 @@ class NoticeTagView(APIView):
 class NoticeContentTagView(APIView):
     serializer_class = NoticeContentTagSerializer
 
-    @permission_classes([IsManager])
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager() or IsTeachingAffairs]
+        return []
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -455,7 +491,6 @@ class NoticeContentTagView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsAuthenticated])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -482,7 +517,6 @@ class NoticeContentTagView(APIView):
         serializer = self.serializer_class(content_tags, many=True)
         return Response(serializer.data)
 
-    @permission_classes([IsManager])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -520,7 +554,15 @@ class NoticeContentTagView(APIView):
 class NoticeRowView(APIView):
     serializer_class = NoticeRowSerializer
 
-    @permission_classes([IsManager])
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'POST':
+            return [IsTeacher() or IsManager()]
+        elif self.request.method == 'DELETE':
+            return [IsTeacher() or IsManager()]
+        return []
+
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -534,7 +576,6 @@ class NoticeRowView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @permission_classes([IsAuthenticated])
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -561,7 +602,6 @@ class NoticeRowView(APIView):
         serializer = self.serializer_class(rows, many=True)
         return Response(serializer.data)
 
-    @permission_classes([IsManager])
     @extend_schema(
         parameters=[
             OpenApiParameter(

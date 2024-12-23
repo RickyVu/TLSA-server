@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Class, TeachClass, ClassLocation, ClassComment
+from .models import Class, TeachClass, ClassLocation, ClassComment, Experiment, ExperimentFile, ExperimentImage
 from django.contrib.auth import get_user_model
 
 
@@ -77,3 +77,62 @@ class ClassCommentWithoutSenderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassComment
         fields = ['class_id', 'content']
+<<<<<<< HEAD
+=======
+
+
+# -----------------------------------------------
+# Experiment
+
+class ExperimentImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExperimentImage
+        fields = ['image']
+
+class ExperimentFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExperimentFile
+        fields = ['file']
+
+class ExperimentSerializer(serializers.ModelSerializer):
+    class_id = serializers.PrimaryKeyRelatedField(queryset=Class.objects.all())
+    images = ExperimentImageSerializer(many=True, read_only=True)
+    files = ExperimentFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Experiment
+        fields = [
+            'title', 'estimated_time', 'safety_tags', 'experiment_method_tags',
+            'submission_type_tags', 'other_tags', 'description', 'class_id', 'images', 'files'
+        ]
+        extra_kwargs = {
+            'title': {'required': True},
+            'description': {'required': True},
+            'safety_tags': {'required': False, 'allow_null': True, 'default': []},
+            'submission_type_tags': {'required': True},
+            'estimated_time': {'required': False, 'default': 0},
+            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
+            'other_tags': {'required': False, 'allow_null': True, 'default': []},
+        }
+
+class ExperimentPatchSerializer(serializers.ModelSerializer):
+    class_id = serializers.PrimaryKeyRelatedField(queryset=Class.objects.all(), required=False)
+    images = ExperimentImageSerializer(many=True, read_only=True)
+    files = ExperimentFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Experiment
+        fields = [
+            'id', 'title', 'estimated_time', 'safety_tags', 'experiment_method_tags',
+            'submission_type_tags', 'other_tags', 'description', 'class_id', 'images', 'files'
+        ]
+        extra_kwargs = {
+            'title': {'required': False},
+            'description': {'required': False},
+            'safety_tags': {'required': False, 'allow_null': True, 'default': []},
+            'submission_type_tags': {'required': False},
+            'estimated_time': {'required': False, 'default': 0},
+            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
+            'other_tags': {'required': False, 'allow_null': True, 'default': []},
+        }
+>>>>>>> tlsa/dev-ricky

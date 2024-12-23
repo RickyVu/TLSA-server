@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
@@ -13,11 +13,16 @@ from .serializers import (TLSAUserSerializer,
                           UserLoginSerializer,
                           RefreshTokenSerializer,
                           UserInfoPatchSerializer)
-
+from .permissions import IsTeachingAffairs
 
 class RegisterView(APIView):
     """Register a new user."""
     serializer_class = UserRegistrationSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsTeachingAffairs()]
+        return []
 
     @extend_schema(
         request={
@@ -81,6 +86,11 @@ class RegisterView(APIView):
 class RegisterStaffView(APIView):
     """Register a new staff user (teacher or manager)."""
     serializer_class = StaffRegistrationSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsTeachingAffairs()]
+        return []
 
     @extend_schema(
         request={
@@ -181,8 +191,15 @@ class LoginView(APIView):
 class UserInfoView(APIView):
     """Retrieve user information based on user_id."""
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
     serializer_class = TLSAUserSerializer
+
+    def get_permissions(self):
+        # IMPORTANT: GET method may have additional user role behaviours defined
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'PATCH':
+            return [IsTeachingAffairs()]
+        return []
 
     @extend_schema(
         parameters=[
@@ -221,7 +238,7 @@ class UserInfoView(APIView):
         users = User.objects.filter(**filters)
 
         # Check if the requesting user is allowed to view the information
-        if request.user.role in ['teacher', 'manager', 'student']:
+        if request.user.role in ['teacher', 'manager', 'student', 'teachingAffairs']:
             serializer = self.serializer_class(users, many=True)
             return Response(serializer.data)
         elif request.user.role == 'student':
@@ -259,7 +276,95 @@ class UserInfoView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
+        
+class ChangeUserRoleView(APIView):
+    """Change user role."""
+    authentication_classes = [JWTAuthentication]
+    serializer_class = TLSAUserSerializer
 
+    def get_permissions(self):
+        # IMPORTANT: GET method may have additional user role behaviours defined
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
+        elif self.request.method == 'PATCH':
+            return [IsTeachingAffairs()]
+        return []
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='user_id',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='User ID to retrieve information for',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='role',
+                type=str,
+                location=OpenApiParameter.QUERY,
+                description='Filter users by role (student/teacher/manager)',
+                required=False,
+            ),
+        ],
+        responses={
+            200: TLSAUserSerializer(many=True),
+            404: None,
+            403: None,
+        },
+    )
+    def get(self, request):
+        user_id = request.query_params.get('user_id')
+        role = request.query_params.get('role')
+
+        filters = {}
+        if user_id:
+            filters["user_id"] = user_id
+        if role:
+            filters["role"] = role
+
+        User = get_user_model()
+        users = User.objects.filter(**filters)
+
+        # Check if the requesting user is allowed to view the information
+        if request.user.role in ['teacher', 'manager', 'student', 'teachingAffairs']:
+            serializer = self.serializer_class(users, many=True)
+            return Response(serializer.data)
+        elif request.user.role == 'student':
+            if user_id and request.user.user_id == user_id:
+                serializer = self.serializer_class(users, many=True)
+                return Response(serializer.data)
+            else:
+                return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({"error": "You do not have permission to view this user's information."}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        request=UserInfoPatchSerializer,
+    )
+    def patch(self, request, format=None):
+        user_id = request.data.get('user_id')
+        User = get_user_model()
+        try:
+            user_instance = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if the requesting user is allowed to update the user information
+        if request.user.role in ['teacher', 'manager'] or request.user.user_id == user_id:
+            serializer = UserInfoPatchSerializer(user_instance, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {
+                        "message": "User information updated successfully.",
+                        "user": serializer.data
+                    },
+                    status=status.HTTP_200_OK
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"error": "You do not have permission to update this user's information."}, status=status.HTTP_403_FORBIDDEN)
 
 class ValidateTokenView(APIView):
     """Validate a JWT token."""

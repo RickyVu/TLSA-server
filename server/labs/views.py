@@ -6,7 +6,7 @@ from .serializers import LabSerializer, ManageLabSerializer, ManagerDetailSerial
 from classes.models import ClassLocation, TeachClass
 from courses.models import CourseClass, CourseEnrollment
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager
+from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager, IsTeachingAffairs
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
@@ -17,7 +17,11 @@ class LabView(APIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
-        elif self.request.method in ['POST', 'PATCH', 'DELETE']:
+        elif self.request.method == 'POST':
+            return [IsManager()]
+        elif self.request.method == 'PATCH':
+            return [IsManager()]
+        elif self.request.method == 'DELETE':
             return [IsManager()]
         return []
 
@@ -170,7 +174,11 @@ class LabManagerView(APIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
-        elif self.request.method in ['POST', 'PATCH', 'DELETE']:
+        elif self.request.method == 'POST':
+            return [IsManager()]
+        elif self.request.method == 'PATCH':
+            return [IsManager()]
+        elif self.request.method == 'DELETE':
             return [IsManager()]
         return []
 
