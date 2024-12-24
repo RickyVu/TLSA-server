@@ -4,6 +4,7 @@ from rest_framework.test import APITestCase, APIClient
 from .models import TLSA_User
 from django.core.files.uploadedfile import SimpleUploadedFile
 
+
 class Logtests(APITestCase):
     def setUp(self):
         self.affair = TLSA_User.objects.create_user(username='manager', password='testpass', user_id='2022012080')
@@ -20,7 +21,7 @@ class Logtests(APITestCase):
 
     def test_user(self):
         url = reverse('register')
-        data={
+        data = {
             "user_id": "2021000000",
             "password": "123456",
         }
@@ -31,7 +32,7 @@ class Logtests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         url = reverse('register-staff')
-        data={
+        data = {
             "user_id": "2022000000",
             "password": "123456",
             "role": "teacher"
@@ -45,7 +46,7 @@ class Logtests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # 未注册用户，失败
-        data={
+        data = {
             "user_id": "2021000001",
             "password": "123456",
         }
@@ -54,7 +55,7 @@ class Logtests(APITestCase):
 
     def test_get_user(self):
         url = reverse('register')
-        data={
+        data = {
             "user_id": "2021000000",
             "password": "123456",
         }
@@ -64,4 +65,3 @@ class Logtests(APITestCase):
         url = f"{reverse('user-info')}?user_id=2021000000"
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-

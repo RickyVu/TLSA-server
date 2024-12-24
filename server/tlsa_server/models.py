@@ -20,16 +20,16 @@ class DateTimeFileName(object):
     def __call__(self, instance, filename):
         # Get the file extension
         ext = filename.split('.')[-1]
-        
+
         # Get the original filename (without extension)
         original_name = os.path.splitext(filename)[0]
-        
+
         # Get the current datetime in a readable format
         current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
         # Create the new filename
         new_filename = f"{original_name}-{current_datetime}.{ext}"
-        
+
         # Return the full path
         return os.path.join(self.path, new_filename)
 

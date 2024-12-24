@@ -91,3 +91,91 @@ class NoticeViewTests(APITestCase):
         self.assertEqual(response.data[0]['notice_type'], 'class')
         self.assertEqual(response.data[0]['class_or_lab_id'], 1)
 
+    def test_create_noticecontent(self):
+        data = {
+            'content_type': 'text',
+            'text_content': 'this is the content'
+        }
+        url = reverse('notice-content-list')
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_noticecontent(self):
+        content = NoticeContent.objects.create(content_type='text', text_content='this is the content')
+        url = f'{reverse('notice-content-list')}?content_id={content.id}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = {
+            'id': content.id,
+            'content_type': 'text',
+            'text_content': 'this is the next content'
+        }
+        url = reverse('notice-content-list')
+        response = self.client.patch(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        url = f'{reverse('notice-content-list')}?content_id={content.id}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_create_noticetag(self):
+        data = {
+            'tag_name': 'text',
+        }
+        url = reverse('notice-tag-list')
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_noticetag(self):
+        tag = NoticeTag.objects.create(tag_name='text')
+        url = f'{reverse('notice-tag-list')}?tag_id={tag.id}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        url = f'{reverse('notice-tag-list')}?tag_id={tag.id}'
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_create_noticecontenttag(self):
+        content = NoticeContent.objects.create(content_type='text', text_content='this is the content')
+        tag = NoticeTag.objects.create(tag_name='text')
+        data = {
+            'notice_content_id': content.id,
+            'notice_tag_id': tag.id,
+        }
+        url = reverse('notice-content-tag-list')
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_get_noticecontenttag(self):
+        content = NoticeContent.objects.create(content_type='text', text_content='this is the content')
+        tag = NoticeTag.objects.create(tag_name='text')
+        contenttag = NoticeContentTag.objects.create(notice_content_id=content, notice_tag_id=tag)
+
+        url = f'{reverse('notice-content-tag-list')}?content_tag_id={contenttag.id}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_create_noticerow(self):
+        content = NoticeContent.objects.create(content_type='text', text_content='this is the content')
+        notice2 = Notice.objects.create(class_or_lab_id=2,
+                                        sender=self.user,
+                                        notice_type='lab',
+                                        post_time='2024-11-27 11:40:58.801197+00',
+                                        end_time='2024-11-27 11:40:58.801197+00')
+        order_num = 1
+        data = {
+            'notice_id': notice2.id,
+            'notice_content_id': content.id,
+            'order_num': order_num,
+        }
+        url = reverse('notice-row-list')
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        url = f'{reverse('notice-row-list')}?row_id={1}'
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

@@ -5,6 +5,7 @@ from rest_framework.test import APITestCase, APIClient
 from .models import Course, CourseClass, CourseEnrollment
 from classes.models import Class
 from tlsa_server.models import TLSA_User
+from .views import CourseView
 
 
 class CourseViewTests(APITestCase):
@@ -45,6 +46,29 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Course.objects.count(), 1)
         self.assertEqual(Course.objects.get().name, 'New Course')
+
+    def test_patch_course(self):
+        """
+        确保我们可以创建一个新的班级
+        """
+        url = reverse('course')
+        data = {
+            'course_code': '00000001',
+            'course_sequence': '12345',
+            'department': '教学楼',
+            'name': 'New Course',
+        }
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = {
+            'course_code': '00000001',
+            'course_sequence': '12345',
+            'department': '九十教',
+            'name': 'Old Course',
+        }
+        response = self.client.patch(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_create_course_secure(self):
         """
@@ -158,6 +182,10 @@ class CourseViewTests(APITestCase):
         response = self.client.post(url, data, format=None)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['enrollment']['course_id'], cse.id)
+
+        view = CourseView()
+        response = view._get_personal_courses_filters(self.student)
+        self.assertEqual(response, {'course_code__in': ('00000001',), 'course_sequence__in': ('12345',)})
 
     def test_create_classenrollment_secure(self):
 

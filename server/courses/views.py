@@ -24,11 +24,11 @@ class CourseView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         elif self.request.method == 'PATCH':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         return []
 
     @extend_schema(
@@ -211,9 +211,9 @@ class CourseEnrollmentView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         return []
 
     @extend_schema(
@@ -354,11 +354,11 @@ class CourseClassView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         elif self.request.method == 'PATCH':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [(IsTeacher | IsTeachingAffairs)()]
         return []
 
     def post(self, request, format=None):
