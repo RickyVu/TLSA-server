@@ -29,11 +29,12 @@ from .secrets import SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-from .allowed_hosts import ALLOWED_HOSTS
+from .allowed_hosts import ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS
 
-
-CORS_ALLOW_ALL_ORIGINS = True  # Remove in production
-# CORS_ALLOWED_ORIGINS = [] Set to ["http://ip:port"]
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True  # Remove in production
+else:
+    CORS_ALLOWED_ORIGINS = [] #Set to ["http://ip:port"] of frontend
 
 # Application definition
 
@@ -127,9 +128,11 @@ AUTH_USER_MODEL = 'tlsa_server.TLSA_User'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 
@@ -151,3 +154,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+MEDIA_URL = 'http://localhost:5000/media/'
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'nginx', 'media')
