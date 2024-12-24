@@ -434,7 +434,7 @@ class CommentToClassView(APIView):
         elif self.request.method == 'POST':
             return [IsAuthenticated()]
         elif self.request.method == 'DELETE':
-            return [(IsTeacher|IsTeachingAffairs)()]
+            return [IsAuthenticated()]
         return []
     
     @extend_schema(
@@ -516,6 +516,7 @@ class CommentToClassView(APIView):
         },
     )
     def delete(self, request, format=None):
+        user = request.user
         comment_id = request.query_params.get('comment_id')
         if not comment_id:
             return Response(
@@ -528,6 +529,9 @@ class CommentToClassView(APIView):
         except ClassComment.DoesNotExist:
             return Response({"message": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        if user.role not in ["teacher", "manager", "teachingAffairs"]:
+            if user != comment.sender_id:
+                return Response({"error": "You do not have permission to delete another user's message."}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response({"message": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     
@@ -557,8 +561,8 @@ class ExperimentView(APIView):
                     "title": {"type": "string"},
                     "estimated_time": {"type": "number"},
                     "safety_tags": {"type": "array", "items": {"type": "string"}},
-                    "experiment_method_tags": {"type": "string"},
-                    "submission_type_tags": {"type": "string"},
+                    "experiment_method_tags": {"type": "array", "items": {"type": "string"}},
+                    "submission_type_tags": {"type": "array", "items": {"type": "string"}},
                     "other_tags": {"type": "array", "items": {"type": "string"}},
                     "description": {"type": "string"},
                     "class_id": {"type": "integer"},
@@ -583,18 +587,7 @@ class ExperimentView(APIView):
         ],
     )
     def post(self, request, format=None):
-        experiment_data = {
-            'title': request.data.get('title'),
-            'estimated_time': request.data.get('estimated_time'),
-            'safety_tags': request.data.get('safety_tags'),
-            'experiment_method_tags': request.data.get('experiment_method_tags'),
-            'submission_type_tags': request.data.get('submission_type_tags'),
-            'other_tags': request.data.get('other_tags'),
-            'description': request.data.get('description'),
-            'class_id': request.data.get('class_id'),
-        }
-
-        experiment_serializer = ExperimentSerializer(data=experiment_data)
+        experiment_serializer = ExperimentSerializer(data=request.data)
         if experiment_serializer.is_valid():
             experiment = experiment_serializer.save()
 
@@ -680,8 +673,8 @@ class ExperimentView(APIView):
                     "title": {"type": "string"},
                     "estimated_time": {"type": "number"},
                     "safety_tags": {"type": "array", "items": {"type": "string"}},
-                    "experiment_method_tags": {"type": "string"},
-                    "submission_type_tags": {"type": "string"},
+                    "experiment_method_tags": {"type": "array", "items": {"type": "string"}},
+                    "submission_type_tags": {"type": "array", "items": {"type": "string"}},
                     "other_tags": {"type": "array", "items": {"type": "string"}},
                     "description": {"type": "string"},
                     "class_id": {"type": "integer"},

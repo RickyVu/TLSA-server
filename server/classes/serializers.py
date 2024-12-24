@@ -102,9 +102,9 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'title': {'required': True},
             'description': {'required': True},
             'safety_tags': {'required': False, 'allow_null': True, 'default': []},
-            'submission_type_tags': {'required': True},
+            'submission_type_tags': {'required': False, 'allow_null': True, 'default': []},
             'estimated_time': {'required': False, 'default': 0},
-            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
+            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': []},
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }
 
@@ -123,8 +123,8 @@ class ExperimentPatchSerializer(serializers.ModelSerializer):
             'title': {'required': False},
             'description': {'required': False},
             'safety_tags': {'required': False, 'allow_null': True, 'default': []},
-            'submission_type_tags': {'required': False},
+            'submission_type_tags': {'required': False, 'allow_null': True, 'default': []},
             'estimated_time': {'required': False, 'default': 0},
-            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
+            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': []},
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }
