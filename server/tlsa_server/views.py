@@ -257,7 +257,7 @@ class UserInfoView(APIView):
             return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if the requesting user is allowed to update the user information
-        if request.user.role in ['teacher', 'manager'] or request.user.user_id == user_id:
+        if request.user.role in ['teacher', 'manager', 'teachingAffairs'] or request.user.user_id == user_id:
             serializer = UserInfoPatchSerializer(user_instance, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()

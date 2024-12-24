@@ -60,9 +60,11 @@ class ClassPatchSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'start_time', 'created_at', 'updated_at']
 
 class ClassCommentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = ClassComment
-        fields = ['sender_id', 'class_id', 'content', 'sent_time']
+        fields = ['id', 'sender_id', 'class_id', 'content', 'sent_time']
 
     sender_id = serializers.CharField(source='sender_id.user_id', read_only=True)
 

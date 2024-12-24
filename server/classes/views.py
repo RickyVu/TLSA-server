@@ -495,17 +495,10 @@ class CommentToClassView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='class_id',
+                name='comment_id',
                 type=int,
                 location=OpenApiParameter.QUERY,
-                description='Class ID to delete comment',
-                required=True,
-            ),
-            OpenApiParameter(
-                name='sender_id',
-                type=str,
-                location=OpenApiParameter.QUERY,
-                description='Sender ID to delete comment',
+                description='Comment ID to delete comment',
                 required=True,
             ),
         ],
@@ -523,16 +516,15 @@ class CommentToClassView(APIView):
         },
     )
     def delete(self, request, format=None):
-        class_id = request.query_params.get('class_id')
-        sender_id = request.query_params.get('sender_id')
-        if not class_id or not sender_id:
+        comment_id = request.query_params.get('comment_id')
+        if not comment_id:
             return Response(
-                {"message": "Both class_id and sender_id are required to delete a comment."},
+                {"message": "Comment ID is required to delete a comment."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            comment = ClassComment.objects.get(class_id=class_id, sender_id=sender_id)
+            comment = ClassComment.objects.get(id=comment_id)
         except ClassComment.DoesNotExist:
             return Response({"message": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
 
