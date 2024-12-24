@@ -21,17 +21,14 @@ class CourseView(APIView):
     authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
-        print(self.request.method)
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            print("HERE")
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsTeachingAffairs()]
-        print("!!!")
+            return [(IsTeacher|IsTeachingAffairs)()]
         return []
 
     @extend_schema(
@@ -99,6 +96,7 @@ class CourseView(APIView):
 
     def _get_personal_courses_filters(self, user):
         filters = {}
+        result_courses = []
         if user.role == "student":
             result_courses = CourseEnrollment.objects.filter(student=user).values_list('course__course_code', 'course__course_sequence')
         elif user.role == "teacher":
@@ -116,7 +114,6 @@ class CourseView(APIView):
 
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
-        print(request.user.role)
         if serializer.is_valid():
             course = serializer.save()
             return Response(
@@ -214,9 +211,9 @@ class CourseEnrollmentView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         return []
 
     @extend_schema(
@@ -357,11 +354,11 @@ class CourseClassView(APIView):
         if self.request.method == 'GET':
             return [IsAuthenticated()]
         elif self.request.method == 'POST':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'PATCH':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         elif self.request.method == 'DELETE':
-            return [IsTeacher() or IsTeachingAffairs()]
+            return [(IsTeacher|IsTeachingAffairs)()]
         return []
 
     def post(self, request, format=None):
@@ -426,7 +423,6 @@ class CourseClassView(APIView):
         # if not course_classes.exists():
         #    return Response({"message": "No matching records found."}, status=status.HTTP_404_NOT_FOUND)
 
-        print(course_classes)
         serializer = CourseClassGetSerializer(course_classes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

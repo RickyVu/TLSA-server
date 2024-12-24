@@ -6,7 +6,7 @@ from tlsa_server.models import TLSA_User
 class LabSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lab
-        fields = ['lab_id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image']
+        fields = ['lab_id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image', 'map_image']
 
     lab_id = serializers.IntegerField(source='id', read_only=True)
 
@@ -44,7 +44,7 @@ class LabGetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lab
-        fields = ['id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image', 'managers']
+        fields = ['id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image', 'map_image', 'managers']
 
     def get_managers(self, obj):
         manage_labs = ManageLab.objects.filter(lab=obj)
@@ -56,4 +56,4 @@ class LabPatchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lab
-        fields = ['id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image']
+        fields = ['id', 'name', 'location', 'safety_equipments', 'safety_notes', 'lab_image', 'map_image']
