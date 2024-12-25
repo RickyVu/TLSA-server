@@ -4,17 +4,23 @@ from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Course, CourseEnrollment
-from .serializers import (CourseSerializer,
-                          CourseEnrollmentSerializer,
-                          CourseClassSerializer,
-                          CourseClassGetSerializer,
-                          CoursePatchSerializer,
-                          CourseEnrollmentGetSerializer)
+from .serializers import (CourseSerializer, 
+                          CourseEnrollmentSerializer, 
+                          CourseClassSerializer, 
+                          CourseClassGetSerializer, 
+                          CoursePatchSerializer, 
+                          CourseEnrollmentGetSerializer,
+                          CoursePageSerializer,
+                          CourseSummaryPageSerializer)
 from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs
-from classes.models import (TeachClass, ClassLocation)
-from labs.models import (ManageLab)
-from courses.models import (CourseClass)
+from classes.models import (TeachClass, ClassLocation, Class, Experiment)
+from labs.models import (ManageLab, Lab)
+from courses.models import (CourseClass, Course, CourseEnrollment)
 
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Count, Prefetch
+from django.db.models import Q
 
 class CourseView(APIView):
     serializer_class = CourseSerializer
@@ -491,3 +497,90 @@ class CourseClassView(APIView):
 
         course_class.delete()
         return Response({"message": "Class deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    
+from django.db.models import Count, Q, OuterRef, Subquery, IntegerField
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
+from notices.models import Notice
+
+class CustomPagination(PageNumberPagination):
+    page_size = 20  # Set the page size to 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class CoursePageListView(ListAPIView):
+    serializer_class = CoursePageSerializer
+    pagination_class = CustomPagination
+
+    # def get_queryset(self):
+    #     # Subquery to count notices for classes
+    #     class_notice_subquery = Notice.objects.filter(
+    #         notice_type='class',
+    #         class_or_lab_id=OuterRef('pk')
+    #     ).values('class_or_lab_id').annotate(notice_count=Count('id')).values('notice_count')
+
+    #     # Subquery to count notices for labs
+    #     lab_notice_subquery = Notice.objects.filter(
+    #         notice_type='lab',
+    #         class_or_lab_id=OuterRef('pk')
+    #     ).values('class_or_lab_id').annotate(notice_count=Count('id')).values('notice_count')
+
+    #     # Annotate classes with notice counts
+    #     classes_with_notice_count = Class.objects.annotate(
+    #         notice_count=Subquery(class_notice_subquery, output_field=IntegerField(), default=0)
+    #     )
+
+    #     # Annotate labs with notice counts
+    #     labs_with_notice_count = Lab.objects.annotate(
+    #         notice_count=Subquery(lab_notice_subquery, output_field=IntegerField(), default=0)
+    #     )
+
+    #     # Prefetch related data for optimization
+    #     queryset = Course.objects.prefetch_related(
+    #         Prefetch(
+    #             'classes',
+    #             queryset=CourseClass.objects.select_related('class_instance').prefetch_related(
+    #                 Prefetch(
+    #                     'class_instance__classlocation_set',
+    #                     queryset=ClassLocation.objects.select_related('lab_id').all()
+    #                 )
+    #             ).all()
+    #         )
+    #     ).annotate(
+    #         class_notice_count=Count(
+    #             'classes__class_instance__id',
+    #             filter=Q(classes__class_instance__id__in=Subquery(
+    #                 Notice.objects.filter(notice_type='class').values('class_or_lab_id')
+    #             ))
+    #         ),
+    #         lab_notice_count=Count(
+    #             'classes__class_instance__classlocation__lab_id__id',
+    #             filter=Q(classes__class_instance__classlocation__lab_id__id__in=Subquery(
+    #                 Notice.objects.filter(notice_type='lab').values('class_or_lab_id')
+    #             ))
+    #         )
+    #     )
+
+    #     return queryset
+
+    queryset = Course.objects.all()
+
+    def get_queryset(self):
+        queryset = Course.objects.prefetch_related(
+            'classes__class_instance',
+            'classes__class_instance__classlocation_set__lab_id',
+            'classes__class_instance__experiments'
+        ).all()
+        return queryset
+
+class CourseSummaryPageView(ListAPIView):
+    serializer_class = CourseSummaryPageSerializer
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        # Annotate each course with the count of classes and enrolled students
+        queryset = Course.objects.annotate(
+            class_count=Count('classes', distinct=True),  # Use 'classes' instead of 'courseclass'
+            student_count=Count('enrollments__student', distinct=True)  # Count of enrolled students
+        )
+        return queryset

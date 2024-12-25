@@ -22,6 +22,7 @@ from .serializers import (ClassSerializer,
                           ExperimentPatchSerializer,
                           ExperimentImageSerializer,
                           ExperimentFileSerializer)
+from django.db.models import Q
 from courses.models import (CourseClass, CourseEnrollment)
 from labs.models import (ManageLab)
 
@@ -100,36 +101,28 @@ class ClassView(APIView):
         personal = request.query_params.get('personal')
         user = request.user
 
-        filters = {}
-        id_in_filters = None
+        query = Q()
 
         if class_id:
-            filters["id"] = class_id
+            query &= Q(id=class_id)
         if class_name:
-            filters["name__icontains"] = class_name
-
+            query &= Q(name__icontains=class_name)
         if course_id:
-            course_classes = CourseClass.objects.filter(course_id=course_id).values_list('class_instance_id', flat=True)
-            id_in_filters = set(course_classes) if id_in_filters is None else id_in_filters.intersection(course_classes)
+            query &= Q(courseclass__course_id=course_id)
 
         if personal and personal.lower() == "true":
             if user.role == "student":
                 enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
-                enrolled_classes = CourseClass.objects.filter(course_id__in=enrolled_courses).values_list('class_instance_id', flat=True)
-                id_in_filters = set(enrolled_classes) if id_in_filters is None else id_in_filters.intersection(enrolled_classes)
+                query &= Q(courseclass__course_id__in=enrolled_courses)
             elif user.role == "teacher":
-                taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
-                id_in_filters = set(taught_classes) if id_in_filters is None else id_in_filters.intersection(taught_classes)
+                query &= Q(teachclass__teacher_id=user)
             elif user.role == "manager":
                 managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
-                managed_classes = ClassLocation.objects.filter(lab_id__in=managed_labs).values_list('class_id', flat=True)
-                id_in_filters = set(managed_classes) if id_in_filters is None else id_in_filters.intersection(managed_classes)
+                query &= Q(classlocation__lab_id__in=managed_labs)
 
-        if id_in_filters is not None:
-            filters["id__in"] = list(id_in_filters)
+        classes = Class.objects.filter(query)
 
-        classes = Class.objects.filter(**filters)
-        serializer = self.serializer_class(classes, many=True)
+        serializer = ClassSerializer(classes, many=True)
         return Response(serializer.data)
 
     @extend_schema(
@@ -436,7 +429,7 @@ class CommentToClassView(APIView):
         elif self.request.method == 'POST':
             return [IsAuthenticated()]
         elif self.request.method == 'DELETE':
-            return [(IsTeacher | IsTeachingAffairs)()]
+            return [IsAuthenticated()]
         return []
 
     @extend_schema(
@@ -497,17 +490,10 @@ class CommentToClassView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name='class_id',
+                name='comment_id',
                 type=int,
                 location=OpenApiParameter.QUERY,
-                description='Class ID to delete comment',
-                required=True,
-            ),
-            OpenApiParameter(
-                name='sender_id',
-                type=str,
-                location=OpenApiParameter.QUERY,
-                description='Sender ID to delete comment',
+                description='Comment ID to delete comment',
                 required=True,
             ),
         ],
@@ -525,19 +511,22 @@ class CommentToClassView(APIView):
         },
     )
     def delete(self, request, format=None):
-        class_id = request.query_params.get('class_id')
-        sender_id = request.query_params.get('sender_id')
-        if not class_id or not sender_id:
+        user = request.user
+        comment_id = request.query_params.get('comment_id')
+        if not comment_id:
             return Response(
-                {"message": "Both class_id and sender_id are required to delete a comment."},
+                {"message": "Comment ID is required to delete a comment."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            comment = ClassComment.objects.get(class_id=class_id, sender_id=sender_id)
+            comment = ClassComment.objects.get(id=comment_id)
         except ClassComment.DoesNotExist:
             return Response({"message": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        if user.role not in ["teacher", "manager", "teachingAffairs"]:
+            if user != comment.sender_id:
+                return Response({"error": "You do not have permission to delete another user's message."}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response({"message": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
@@ -568,8 +557,8 @@ class ExperimentView(APIView):
                     "title": {"type": "string"},
                     "estimated_time": {"type": "number"},
                     "safety_tags": {"type": "array", "items": {"type": "string"}},
-                    "experiment_method_tags": {"type": "string"},
-                    "submission_type_tags": {"type": "string"},
+                    "experiment_method_tags": {"type": "array", "items": {"type": "string"}},
+                    "submission_type_tags": {"type": "array", "items": {"type": "string"}},
                     "other_tags": {"type": "array", "items": {"type": "string"}},
                     "description": {"type": "string"},
                     "class_id": {"type": "integer"},
@@ -594,18 +583,7 @@ class ExperimentView(APIView):
         ],
     )
     def post(self, request, format=None):
-        experiment_data = {
-            'title': request.data.get('title'),
-            'estimated_time': request.data.get('estimated_time'),
-            'safety_tags': request.data.get('safety_tags'),
-            'experiment_method_tags': request.data.get('experiment_method_tags'),
-            'submission_type_tags': request.data.get('submission_type_tags'),
-            'other_tags': request.data.get('other_tags'),
-            'description': request.data.get('description'),
-            'class_id': request.data.get('class_id'),
-        }
-
-        experiment_serializer = ExperimentSerializer(data=experiment_data)
+        experiment_serializer = ExperimentSerializer(data=request.data)
         if experiment_serializer.is_valid():
             experiment = experiment_serializer.save()
 
@@ -691,8 +669,8 @@ class ExperimentView(APIView):
                     "title": {"type": "string"},
                     "estimated_time": {"type": "number"},
                     "safety_tags": {"type": "array", "items": {"type": "string"}},
-                    "experiment_method_tags": {"type": "string"},
-                    "submission_type_tags": {"type": "string"},
+                    "experiment_method_tags": {"type": "array", "items": {"type": "string"}},
+                    "submission_type_tags": {"type": "array", "items": {"type": "string"}},
                     "other_tags": {"type": "array", "items": {"type": "string"}},
                     "description": {"type": "string"},
                     "class_id": {"type": "integer"},

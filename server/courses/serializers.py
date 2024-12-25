@@ -125,3 +125,116 @@ class CourseClassGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseClass
         fields = ['class_id', 'course_code', 'course_sequence']
+
+
+# ----------------------------------------------------------------
+# Frontend required API
+
+from rest_framework import serializers
+from .models import Course, CourseClass
+from classes.models import ClassLocation, Class, Experiment
+from labs.models import Lab
+from datetime import datetime
+from notices.models import Notice
+
+class FrontendClassDetailSerializer(serializers.ModelSerializer):
+    lab_name = serializers.SerializerMethodField()
+    notice_count = serializers.SerializerMethodField()
+    experiment_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Class
+        fields = ['id', 'name', 'start_time', 'lab_name', 'notice_count', 'experiment_count']
+
+    def get_lab_name(self, obj):
+        class_location = ClassLocation.objects.filter(class_id=obj).first()
+        return class_location.lab_id.name if class_location else None
+
+    def get_notice_count(self, obj):
+        # Get the lab_id associated with this class
+        class_location = ClassLocation.objects.filter(class_id=obj).first()
+        lab_id = class_location.lab_id.id if class_location else None
+
+        # Get current datetime for filtering notices
+        current_time = datetime.now()
+
+        # Base query for class notices
+        # class_notices = Notice.objects.filter(
+        #     notice_type='class',
+        #     class_or_lab_id=obj.id,
+        #     post_time__lte=current_time,
+        #     end_time__gte=current_time
+        # ).count()
+
+        # # If lab_id exists, add lab notices
+        # lab_notices = 0
+        # if lab_id:
+        #     lab_notices = Notice.objects.filter(
+        #         notice_type='lab',
+        #         class_or_lab_id=lab_id,
+        #         post_time__lte=current_time,
+        #         end_time__gte=current_time
+        #     ).count()
+
+        # Base query for class notices
+        class_notices = Notice.objects.filter(
+            notice_type='class',
+            class_or_lab_id=obj.id,
+        ).count()
+
+        # If lab_id exists, add lab notices
+        lab_notices = 0
+        if lab_id:
+            lab_notices = Notice.objects.filter(
+                notice_type='lab',
+                class_or_lab_id=lab_id,
+            ).count()
+
+        return class_notices + lab_notices
+
+    def get_experiment_count(self, obj):
+        return Experiment.objects.filter(class_id=obj).count()
+
+class CoursePageSerializer(serializers.ModelSerializer):
+    classes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ['id', 'course_code', 'course_sequence', 'classes']
+
+    def get_classes(self, obj):
+        course_classes = CourseClass.objects.filter(course=obj).select_related('class_instance')
+        class_instances = [cc.class_instance for cc in course_classes]
+        return FrontendClassDetailSerializer(class_instances, many=True).data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class CourseSummaryPageSerializer(serializers.ModelSerializer):
+    class_count = serializers.IntegerField()
+    student_count = serializers.IntegerField()
+
+    class Meta:
+        model = Course
+        fields = ['course_code', 'course_sequence', 'name', 'class_count', 'student_count']

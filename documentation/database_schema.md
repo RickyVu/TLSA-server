@@ -1,6 +1,6 @@
 
 ### At a glance
-![ER-diagram](TLSA%20ER.png)
+![ER-diagram](TLSA_ER_v2.png)
 ```
 role = ‘student’|’teacher’|’manager’
 notice_type = ‘class’|’lab’
@@ -27,105 +27,170 @@ class_comment(sender_id, class_id, sent_time, content)
 ---
 ### Detailed Schema
 ```postgres
-CREATE TABLE user (
-    id VARCHAR(10) PRIMARY KEY, 
-    name VARCHAR(50), 
-    password VARCHAR(255), 
-    email VARCHAR(255) UNIQUE, 
-    role ENUM('student', 'teacher', 'manager'), 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- tlsa_user table
+CREATE TABLE tlsa_user (
+    user_id VARCHAR(10) PRIMARY KEY,
+    password VARCHAR(128) NOT NULL,
+    email VARCHAR(254),
+    role VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(20),
+    profile_picture VARCHAR(100),
+    real_name VARCHAR(150),
+    department VARCHAR(50)
 );
 
-CREATE TABLE course (
-    id SERIAL PRIMARY KEY, 
-    name VARCHAR(100)
-);
-
-CREATE TABLE class (
-    id SERIAL PRIMARY KEY, 
-    name VARCHAR(100), 
-    start_time TIMESTAMP, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-CREATE TABLE lab (
-    id SERIAL PRIMARY KEY, 
-    name VARCHAR(100) UNIQUE, 
-    location VARCHAR(255)
-);
-
+-- notice table
 CREATE TABLE notice (
-    id SERIAL PRIMARY KEY, 
-class_or_lab_id INT,
-sender_id VARCHAR(10) REFERENCES user(id), 
-    notice_type ENUM('class', 'lab'), 
-    post_time TIMESTAMP, 
-    end_time TIMESTAMP, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    id SERIAL PRIMARY KEY,
+    class_or_lab_id INTEGER NOT NULL,
+    sender_id VARCHAR(10) NOT NULL REFERENCES tlsa_user(user_id) ON DELETE CASCADE,
+    notice_type VARCHAR(10) NOT NULL,
+    post_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- notice_completion table
 CREATE TABLE notice_completion (
-    notice_id INT REFERENCES notice(id), 
-    user_id VARCHAR(10) REFERENCES user(id), 
-    completion_time TIMESTAMP
+    id SERIAL PRIMARY KEY,
+    notice_id INTEGER NOT NULL REFERENCES notice(id) ON DELETE CASCADE,
+    user_id VARCHAR(10) NOT NULL REFERENCES tlsa_user(user_id) ON DELETE CASCADE,
+    completion_time TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
+-- notice_content table
 CREATE TABLE notice_content (
-    id SERIAL PRIMARY KEY, 
-    content TEXT, 
-content_type VARCHAR(50)
+    id SERIAL PRIMARY KEY,
+    content_type VARCHAR(10) NOT NULL,
+    text_content TEXT,
+    image_content VARCHAR(100),
+    file_content VARCHAR(100)
 );
 
+-- notice_tag table
 CREATE TABLE notice_tag (
-    id SERIAL PRIMARY KEY, 
-    tag_name VARCHAR(50) UNIQUE
+    id SERIAL PRIMARY KEY,
+    tag_name VARCHAR(50) NOT NULL UNIQUE
 );
 
+-- notice_content_tag table
 CREATE TABLE notice_content_tag (
-    notice_content_id INT REFERENCES notice_content(id), 
-    notice_tag_id INT REFERENCES notice_tag(id), 
+    notice_content_id INTEGER NOT NULL REFERENCES notice_content(id) ON DELETE CASCADE,
+    notice_tag_id INTEGER NOT NULL REFERENCES notice_tag(id) ON DELETE CASCADE,
     PRIMARY KEY (notice_content_id, notice_tag_id)
 );
 
+-- notice_row table
 CREATE TABLE notice_row (
-    notice_id INT REFERENCES notice(id) ON DELETE CASCADE,
-    notice_content_id INT REFERENCES notice_content(id), 
-    order_num INT,
-    PRIMARY KEY (notice_id, notice_content_id)
+    id SERIAL PRIMARY KEY,
+    notice_id INTEGER NOT NULL REFERENCES notice(id) ON DELETE CASCADE,
+    notice_content_id INTEGER NOT NULL REFERENCES notice_content(id) ON DELETE CASCADE,
+    order_num INTEGER NOT NULL,
+    UNIQUE (notice_id, notice_content_id)
 );
 
+-- lab table
+CREATE TABLE lab (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    location VARCHAR(255) NOT NULL,
+    safety_equipments TEXT[] DEFAULT ARRAY[]::TEXT[],
+    safety_notes TEXT,
+    lab_image VARCHAR(100),
+    map_image VARCHAR(100)
+);
+
+-- manage_lab table
 CREATE TABLE manage_lab (
-    manager_id VARCHAR(10) REFERENCES user(id), 
-    lab_id INT REFERENCE lab(id)
+    manager_user_id VARCHAR(10) NOT NULL REFERENCES tlsa_user(user_id) ON DELETE CASCADE,
+    lab_id INTEGER NOT NULL REFERENCES lab(id) ON DELETE CASCADE,
+    PRIMARY KEY (manager_user_id, lab_id)
 );
 
-CREATE TABLE teach_class (
-    class_id INT REFERENCES class(id), 
-    teacher_id VARCHAR(10) REFERENCES user(id)
+-- course table
+CREATE TABLE course (
+    course_code VARCHAR(8) NOT NULL,
+    course_sequence VARCHAR(5) NOT NULL,
+    department VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    PRIMARY KEY (course_code, course_sequence)
 );
 
+-- course_enrollment table
 CREATE TABLE course_enrollment (
-    student_id VARCHAR(10) REFERENCES user(id), 
-    course_id INT REFERENCES course(id)
+    student_user_id VARCHAR(10) NOT NULL REFERENCES tlsa_user(user_id) ON DELETE CASCADE,
+    course_code VARCHAR(8) NOT NULL,
+    course_sequence VARCHAR(5) NOT NULL,
+    PRIMARY KEY (student_user_id, course_code, course_sequence),
+    FOREIGN KEY (course_code, course_sequence) REFERENCES course(course_code, course_sequence) ON DELETE CASCADE
 );
 
-CREATE TABLE class_location (
-    class_id INT REFERENCES class(id), 
-    lab_id INT REFERENCE lab(id)
-);
-
+-- course_class table
 CREATE TABLE course_class (
-    course_id INT REFERENCES course(id), 
-    class_id INT REFERENCES class(id)
+    course_code VARCHAR(8) NOT NULL,
+    course_sequence VARCHAR(5) NOT NULL,
+    class_id INTEGER NOT NULL REFERENCES class(id) ON DELETE CASCADE,
+    PRIMARY KEY (course_code, course_sequence, class_id),
+    FOREIGN KEY (course_code, course_sequence) REFERENCES course(course_code, course_sequence) ON DELETE CASCADE
 );
 
+-- class table
+CREATE TABLE class (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- class_location table
+CREATE TABLE class_location (
+    class_id INTEGER NOT NULL REFERENCES class(id) ON DELETE CASCADE,
+    lab_id INTEGER NOT NULL REFERENCES lab(id) ON DELETE CASCADE,
+    PRIMARY KEY (class_id, lab_id)
+);
+
+-- teach_class table
+CREATE TABLE teach_class (
+    class_id INTEGER NOT NULL REFERENCES class(id) ON DELETE CASCADE,
+    teacher_id VARCHAR(10) NOT NULL REFERENCES tlsa_user(user_id) ON DELETE CASCADE,
+    PRIMARY KEY (class_id, teacher_id)
+);
+
+-- class_comment table
 CREATE TABLE class_comment (
-    sender_id VARCHAR(10) REFERENCES user(id), 
-    class_id INT REFERENCES class(id), 
-    sent_time TIMESTAMP, 
-    content TEXT
+    id SERIAL PRIMARY KEY,
+    sender_id VARCHAR(10) NOT NULL REFERENCES tlsa_user(user_id) ON DELETE CASCADE,
+    class_id INTEGER NOT NULL REFERENCES class(id) ON DELETE CASCADE,
+    sent_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    content TEXT NOT NULL
+);
+
+-- experiment table
+CREATE TABLE experiment (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    estimated_time FLOAT NOT NULL,
+    safety_tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+    experiment_method_tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+    submission_type_tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+    other_tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+    description TEXT,
+    class_id INTEGER NOT NULL REFERENCES class(id) ON DELETE CASCADE
+);
+
+-- experiment_image table
+CREATE TABLE experiment_image (
+    id SERIAL PRIMARY KEY,
+    experiment_id INTEGER NOT NULL REFERENCES experiment(id) ON DELETE CASCADE,
+    image VARCHAR(100) NOT NULL
+);
+
+-- experiment_file table
+CREATE TABLE experiment_file (
+    id SERIAL PRIMARY KEY,
+    experiment_id INTEGER NOT NULL REFERENCES experiment(id) ON DELETE CASCADE,
+    file VARCHAR(100) NOT NULL
 );
 ```

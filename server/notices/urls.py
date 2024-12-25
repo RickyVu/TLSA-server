@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import (NoticeView,
-                    NoticeCompletionView,
-                    NoticeContentView,
-                    NoticeTagView,
-                    NoticeContentTagView,
-                    NoticeRowView)
+from .views import (NoticeView, 
+                    NoticeCompletionView, 
+                    NoticeContentView, 
+                    NoticeTagView, 
+                    NoticeContentTagView, 
+                    NoticeRowView,
+                    NoticePageView)
 
 urlpatterns = [
     path('notices', NoticeView.as_view(), name='notice-list'),
@@ -13,4 +14,5 @@ urlpatterns = [
     path('notice-tags', NoticeTagView.as_view(), name='notice-tag-list'),
     path('notice-content-tags', NoticeContentTagView.as_view(), name='notice-content-tag-list'),
     path('notice-rows', NoticeRowView.as_view(), name='notice-row-list'),
+    path('notice-page', NoticePageView.as_view(), name='notice-page')
 ]

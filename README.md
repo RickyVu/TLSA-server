@@ -10,4 +10,4 @@ Repository for frontend [here](https://github.com/OneSony/LabSafety).
 
 - [REST API Documentation](./documentation/tlsa_server_api.md)
 - [PostgreSQL Schema](./documentation/database_schema.md)
-![ER-diagram](./documentation/TLSA%20ER.png)
+![ER-diagram](./documentation/TLSA_ER_v2.png)
