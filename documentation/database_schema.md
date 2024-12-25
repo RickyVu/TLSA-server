@@ -1,6 +1,6 @@
 
 ### At a glance
-![ER-diagram](TLSA%20ER.png)
+![ER-diagram](TLSA_ER_v2.png)
 ```
 role = ‘student’|’teacher’|’manager’
 notice_type = ‘class’|’lab’
