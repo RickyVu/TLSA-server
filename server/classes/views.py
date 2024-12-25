@@ -22,6 +22,7 @@ from .serializers import (ClassSerializer,
                           ExperimentPatchSerializer,
                           ExperimentImageSerializer,
                           ExperimentFileSerializer)
+from django.db.models import Q
 from courses.models import (CourseClass, CourseEnrollment)
 from labs.models import (ManageLab)
 
@@ -99,36 +100,28 @@ class ClassView(APIView):
         personal = request.query_params.get('personal')
         user = request.user
 
-        filters = {}
-        id_in_filters = None
+        query = Q()
 
         if class_id:
-            filters["id"] = class_id
+            query &= Q(id=class_id)
         if class_name:
-            filters["name__icontains"] = class_name
-
+            query &= Q(name__icontains=class_name)
         if course_id:
-            course_classes = CourseClass.objects.filter(course_id=course_id).values_list('class_instance_id', flat=True)
-            id_in_filters = set(course_classes) if id_in_filters is None else id_in_filters.intersection(course_classes)
+            query &= Q(courseclass__course_id=course_id)
 
         if personal and personal.lower() == "true":
             if user.role == "student":
                 enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
-                enrolled_classes = CourseClass.objects.filter(course_id__in=enrolled_courses).values_list('class_instance_id', flat=True)
-                id_in_filters = set(enrolled_classes) if id_in_filters is None else id_in_filters.intersection(enrolled_classes)
+                query &= Q(courseclass__course_id__in=enrolled_courses)
             elif user.role == "teacher":
-                taught_classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
-                id_in_filters = set(taught_classes) if id_in_filters is None else id_in_filters.intersection(taught_classes)
+                query &= Q(teachclass__teacher_id=user)
             elif user.role == "manager":
                 managed_labs = ManageLab.objects.filter(manager=user).values_list('lab_id', flat=True)
-                managed_classes = ClassLocation.objects.filter(lab_id__in=managed_labs).values_list('class_id', flat=True)
-                id_in_filters = set(managed_classes) if id_in_filters is None else id_in_filters.intersection(managed_classes)
+                query &= Q(classlocation__lab_id__in=managed_labs)
 
-        if id_in_filters is not None:
-            filters["id__in"] = list(id_in_filters)
+        classes = Class.objects.filter(query)
 
-        classes = Class.objects.filter(**filters)
-        serializer = self.serializer_class(classes, many=True)
+        serializer = ClassSerializer(classes, many=True)
         return Response(serializer.data)
     
     @extend_schema(
