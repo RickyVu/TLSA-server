@@ -70,3 +70,11 @@ class NoticePatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notice
         fields = ['id', 'class_or_lab_id', 'sender', 'notice_type', 'post_time', 'end_time']
+
+class NoticePageSerializer(serializers.ModelSerializer):
+    class_id = serializers.IntegerField(allow_null=True)
+    course_id = serializers.IntegerField()
+
+    class Meta:
+        model = Notice
+        fields = ['id', 'class_or_lab_id', 'sender', 'notice_type', 'post_time', 'end_time', 'class_id', 'course_id']

@@ -628,3 +628,54 @@ class NoticeRowView(APIView):
 
         row.delete()
         return Response({"message": "Notice row deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+from django.db.models import Q, F, Case, When, IntegerField, OuterRef, Subquery
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from courses.models import CourseEnrollment, CourseClass
+from classes.models import TeachClass, Class, ClassLocation
+from .serializers import NoticePageSerializer
+from rest_framework.pagination import PageNumberPagination
+
+class CustomPagination(PageNumberPagination):
+    page_size = 20  # Set the page size to 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class NoticePageView(ListAPIView):
+    serializer_class = NoticePageSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Determine if the user is a student or teacher
+        if user.role == "student":  # Assuming you have a method or field to check if the user is a student
+            # Get courses enrolled by the student
+            enrolled_courses = CourseEnrollment.objects.filter(student=user).values_list('course_id', flat=True)
+            # Get classes for those courses
+            classes = Class.objects.filter(courseclass__course_id__in=enrolled_courses)
+        elif user.role == "teacher":  # Assuming you have a method or field to check if the user is a teacher
+            # Get classes taught by the teacher
+            classes = TeachClass.objects.filter(teacher_id=user).values_list('class_id', flat=True)
+        else:
+            return Notice.objects.none()  # Return empty queryset if user role is not recognized
+
+        # Use Q objects to combine class and lab notices
+        queryset = Notice.objects.filter(
+            Q(notice_type='class', class_or_lab_id__in=classes) |
+            Q(notice_type='lab', class_or_lab_id__in=ClassLocation.objects.filter(class_id__in=classes).values_list('lab_id', flat=True))
+        ).annotate(
+            class_id=Case(
+                When(notice_type='class', then=F('class_or_lab_id')),
+                default=None,
+                output_field=IntegerField()
+            ),
+            course_id=Subquery(
+                CourseClass.objects.filter(class_instance_id=OuterRef('class_or_lab_id')).values('course_id')[:1],
+                output_field=IntegerField()
+            )
+        )
+
+        return queryset

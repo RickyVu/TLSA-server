@@ -60,9 +60,11 @@ class ClassPatchSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'start_time', 'created_at', 'updated_at']
 
 class ClassCommentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = ClassComment
-        fields = ['sender_id', 'class_id', 'content', 'sent_time']
+        fields = ['id', 'sender_id', 'class_id', 'content', 'sent_time']
 
     sender_id = serializers.CharField(source='sender_id.user_id', read_only=True)
 
@@ -100,9 +102,9 @@ class ExperimentSerializer(serializers.ModelSerializer):
             'title': {'required': True},
             'description': {'required': True},
             'safety_tags': {'required': False, 'allow_null': True, 'default': []},
-            'submission_type_tags': {'required': True},
+            'submission_type_tags': {'required': False, 'allow_null': True, 'default': []},
             'estimated_time': {'required': False, 'default': 0},
-            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
+            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': []},
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }
 
@@ -121,8 +123,8 @@ class ExperimentPatchSerializer(serializers.ModelSerializer):
             'title': {'required': False},
             'description': {'required': False},
             'safety_tags': {'required': False, 'allow_null': True, 'default': []},
-            'submission_type_tags': {'required': False},
+            'submission_type_tags': {'required': False, 'allow_null': True, 'default': []},
             'estimated_time': {'required': False, 'default': 0},
-            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': None},
+            'experiment_method_tags': {'required': False, 'allow_null': True, 'default': []},
             'other_tags': {'required': False, 'allow_null': True, 'default': []},
         }
