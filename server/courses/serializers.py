@@ -1,7 +1,9 @@
+from notices.models import Notice
+from datetime import datetime
+from classes.models import ClassLocation, Class, Experiment
 from rest_framework import serializers
 from .models import Course, CourseEnrollment, CourseClass
 from tlsa_server.models import TLSA_User
-from classes.models import Class
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -130,12 +132,6 @@ class CourseClassGetSerializer(serializers.ModelSerializer):
 # ----------------------------------------------------------------
 # Frontend required API
 
-from rest_framework import serializers
-from .models import Course, CourseClass
-from classes.models import ClassLocation, Class, Experiment
-from labs.models import Lab
-from datetime import datetime
-from notices.models import Notice
 
 class FrontendClassDetailSerializer(serializers.ModelSerializer):
     lab_name = serializers.SerializerMethodField()
@@ -195,6 +191,7 @@ class FrontendClassDetailSerializer(serializers.ModelSerializer):
     def get_experiment_count(self, obj):
         return Experiment.objects.filter(class_id=obj).count()
 
+
 class CoursePageSerializer(serializers.ModelSerializer):
     classes = serializers.SerializerMethodField()
 
@@ -206,29 +203,6 @@ class CoursePageSerializer(serializers.ModelSerializer):
         course_classes = CourseClass.objects.filter(course=obj).select_related('class_instance')
         class_instances = [cc.class_instance for cc in course_classes]
         return FrontendClassDetailSerializer(class_instances, many=True).data
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class CourseSummaryPageSerializer(serializers.ModelSerializer):

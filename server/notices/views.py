@@ -1,11 +1,16 @@
+from django.db.models import Q, F, Case, When, IntegerField, OuterRef, Subquery
+from rest_framework.pagination import PageNumberPagination
+from .serializers import NoticePageSerializer
+from classes.models import TeachClass, Class, ClassLocation
+from courses.models import CourseEnrollment, CourseClass
+from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Notice, NoticeCompletion, NoticeContent, NoticeTag, NoticeContentTag, NoticeRow
 from .serializers import NoticeSerializer, NoticeCompletionSerializer, NoticeContentSerializer, NoticeTagSerializer, NoticeContentTagSerializer, NoticeRowSerializer, NoticeGetSerializer, NoticePatchSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from rest_framework.decorators import permission_classes
-from tlsa_server.permissions import IsAuthenticated, IsStudent, IsTeacher, IsManager, IsTeachingAffairs
+from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsManager, IsTeachingAffairs
 
 
 class NoticeView(APIView):
@@ -635,18 +640,12 @@ class NoticeRowView(APIView):
         row.delete()
         return Response({"message": "Notice row deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
-from django.db.models import Q, F, Case, When, IntegerField, OuterRef, Subquery
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
-from courses.models import CourseEnrollment, CourseClass
-from classes.models import TeachClass, Class, ClassLocation
-from .serializers import NoticePageSerializer
-from rest_framework.pagination import PageNumberPagination
 
 class CustomPagination(PageNumberPagination):
     page_size = 20  # Set the page size to 20
     page_size_query_param = 'page_size'
     max_page_size = 100
+
 
 class NoticePageView(ListAPIView):
     serializer_class = NoticePageSerializer
@@ -670,8 +669,7 @@ class NoticePageView(ListAPIView):
 
         # Use Q objects to combine class and lab notices
         queryset = Notice.objects.filter(
-            Q(notice_type='class', class_or_lab_id__in=classes) |
-            Q(notice_type='lab', class_or_lab_id__in=ClassLocation.objects.filter(class_id__in=classes).values_list('lab_id', flat=True))
+            Q(notice_type='class', class_or_lab_id__in=classes) | Q(notice_type='lab', class_or_lab_id__in=ClassLocation.objects.filter(class_id__in=classes).values_list('lab_id', flat=True))
         ).annotate(
             class_id=Case(
                 When(notice_type='class', then=F('class_or_lab_id')),

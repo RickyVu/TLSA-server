@@ -1,26 +1,24 @@
+from django.db.models import Count
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Course, CourseEnrollment
-from .serializers import (CourseSerializer, 
-                          CourseEnrollmentSerializer, 
-                          CourseClassSerializer, 
-                          CourseClassGetSerializer, 
-                          CoursePatchSerializer, 
+from .serializers import (CourseSerializer,
+                          CourseEnrollmentSerializer,
+                          CourseClassSerializer,
+                          CourseClassGetSerializer,
+                          CoursePatchSerializer,
                           CourseEnrollmentGetSerializer,
                           CoursePageSerializer,
                           CourseSummaryPageSerializer)
 from tlsa_server.permissions import IsAuthenticated, IsTeacher, IsTeachingAffairs
-from classes.models import (TeachClass, ClassLocation, Class, Experiment)
-from labs.models import (ManageLab, Lab)
+from classes.models import (TeachClass, ClassLocation)
+from labs.models import (ManageLab)
 from courses.models import (CourseClass, Course, CourseEnrollment)
-
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Count, Prefetch
-from django.db.models import Q
+
 
 class CourseView(APIView):
     serializer_class = CourseSerializer
@@ -497,16 +495,13 @@ class CourseClassView(APIView):
 
         course_class.delete()
         return Response({"message": "Class deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-    
-from django.db.models import Count, Q, OuterRef, Subquery, IntegerField
-from rest_framework.generics import ListAPIView
-from rest_framework.pagination import PageNumberPagination
-from notices.models import Notice
+
 
 class CustomPagination(PageNumberPagination):
     page_size = 20  # Set the page size to 20
     page_size_query_param = 'page_size'
     max_page_size = 100
+
 
 class CoursePageListView(ListAPIView):
     serializer_class = CoursePageSerializer
@@ -572,6 +567,7 @@ class CoursePageListView(ListAPIView):
             'classes__class_instance__experiments'
         ).all()
         return queryset
+
 
 class CourseSummaryPageView(ListAPIView):
     serializer_class = CourseSummaryPageSerializer
